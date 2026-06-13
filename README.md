@@ -10,9 +10,9 @@ Render [Mermaid](https://mermaid.js.org) diagrams to SVG in **pure Go** — no
 headless browser, no Node.js, no JavaScript runtime. Just a library and a
 single static binary.
 
-> **Status:** early (v0). Flowcharts (`graph TD` / `graph LR`) are supported.
-> Other diagram types are on the [roadmap](#roadmap). Not affiliated with the
-> Mermaid project; this is an independent, compatible renderer.
+> **Status:** pre-1.0, actively developed. 13 diagram types supported (see
+> the [table below](#diagram-types)). Not affiliated with the Mermaid project;
+> this is an independent, compatible renderer.
 
 ## Why
 
@@ -135,12 +135,17 @@ Rendering is fast — roughly 10–50µs per diagram with no external processes.
 | Stadium | `A([Label])` |
 | Circle | `A((Label))` |
 | Diamond | `A{Label}` |
-| Arrow | `A --> B` |
-| Open link | `A --- B` |
-| Dotted | `A -.-> B` |
-| Thick | `A ==> B` |
-| Edge label | `A -->\|text\| B` |
-| Comments | `%% comment` |
+| Hexagon | `A{{Label}}` |
+| Subroutine | `A[[Label]]` |
+| Cylinder | `A[(Label)]` |
+| Parallelogram | `A[/Label/]`, `A[\Label\]` |
+| Trapezoid | `A[/Label\]`, `A[\Label/]` |
+| Arrow / open / dotted / thick | `A --> B`, `A --- B`, `A -.-> B`, `A ==> B` |
+| Edge label | `A -->\|text\| B`, `A -- text --> B` |
+| Subgraph | `subgraph T` … `end` |
+| Styling | `classDef`, `class`, `style`, `A:::cls` |
+| Link | `click A href "url"` |
+| Separators / comments | `A-->B; B-->C`, `%% comment` |
 
 ### Sequence syntax
 

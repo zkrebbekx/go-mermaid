@@ -1,8 +1,11 @@
 // Package mermaid renders Mermaid diagrams to SVG in pure Go, with no
 // headless browser or JavaScript runtime required.
 //
-// The v0 surface targets flowcharts (graph TD / graph LR). Other diagram
-// types are planned; see the package roadmap in the README.
+// Supported diagram types are detected from the source header: flowchart
+// (graph/flowchart), sequenceDiagram, classDiagram, stateDiagram-v2,
+// erDiagram, pie, journey, quadrantChart, gitGraph, timeline, mindmap,
+// gantt, and C4 (C4Context/C4Container). Unsupported types return
+// ErrUnsupported. See DiagramTypes for the current list.
 //
 // Basic use:
 //

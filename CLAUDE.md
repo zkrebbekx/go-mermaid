@@ -5,7 +5,9 @@ Guidance for AI assistants and contributors working in this repository.
 ## What this is
 
 `go-mermaid` renders Mermaid diagrams to SVG in pure Go — no headless browser,
-no Node, no JavaScript runtime. v0 targets flowcharts.
+no Node, no JavaScript runtime. Supports 13 diagram types (flowchart,
+sequence, class, state, ER, pie, journey, quadrant, gitGraph, timeline,
+mindmap, gantt, C4).
 
 ## Architecture
 
@@ -138,8 +140,10 @@ func TestParse(t *testing.T) {
 
 ## Roadmap context
 
-v0 layout uses longest-path ranking with straight edges — correct and
-deterministic, not yet optimal. Planned: network-simplex ranking, crossing
-minimization, spline/orthogonal edge routing, subgraphs, then new diagram types
-(sequence, class). Keep new code behind the existing stage interfaces so these
-can land without API churn.
+The flowchart layout is Sugiyama-style: cycle removal, longest-path ranking,
+median crossing minimization with dummy nodes for long edges, and barycenter
+x-positioning. Edges are orthogonal by default with an optional curved mode.
+Ranking is still longest-path (network-simplex would tighten it). Remaining
+ideas: network-simplex ranking, spline routing, and more diagram types
+(requirement, sankey) plus PNG export. Keep new code behind the existing stage
+interfaces so these land without API churn.
