@@ -74,6 +74,48 @@ func TestParseErrors(t *testing.T) {
 	})
 }
 
+func TestMiddleFormLabels(t *testing.T) {
+	Convey("Given middle-form edge labels", t, func() {
+		cases := []struct {
+			src   string
+			label string
+			arrow domain.Arrow
+		}{
+			{"graph LR\nA -- yes --> B", "yes", domain.ArrowNormal},
+			{"graph LR\nA == no ==> B", "no", domain.ArrowThick},
+			{"graph LR\nA -. maybe .-> B", "maybe", domain.ArrowDotted},
+			{"graph LR\nA -- two words --> B", "two words", domain.ArrowNormal},
+		}
+		for _, c := range cases {
+			c := c
+			Convey("When parsing "+c.src, func() {
+				g, err := parse(c.src)
+
+				Convey("Then the label and arrow are captured on a single edge", func() {
+					So(err, ShouldBeNil)
+					So(len(g.Edges), ShouldEqual, 1)
+					So(g.Edges[0].Label, ShouldEqual, c.label)
+					So(g.Edges[0].Arrow, ShouldEqual, c.arrow)
+					So(len(g.Nodes), ShouldEqual, 2)
+				})
+			})
+		}
+	})
+
+	Convey("Given a plain open link A -- B", t, func() {
+		Convey("When parsing", func() {
+			g, err := parse("graph LR\nA -- B")
+
+			Convey("Then it is a single open edge between two nodes", func() {
+				So(err, ShouldBeNil)
+				So(len(g.Nodes), ShouldEqual, 2)
+				So(len(g.Edges), ShouldEqual, 1)
+				So(g.Edges[0].Arrow, ShouldEqual, domain.ArrowOpen)
+			})
+		})
+	})
+}
+
 func TestStatementSeparators(t *testing.T) {
 	Convey("Given semicolon-separated statements", t, func() {
 		Convey("When parsing a single line and a header with inline statements", func() {

@@ -87,6 +87,24 @@ func (p *parser) parseStatement() error {
 				return p.errAt(p.cur(), "expected closing '|'")
 			}
 			p.next()
+		} else if !strings.Contains(arrowTok.Val, ">") {
+			// Possible middle-form label: A -- text --> B / A == t ==> B.
+			// The first connector is open (no arrowhead); words between it and
+			// a second connector are the label, and that second connector
+			// determines the arrow style.
+			saved := p.pos
+			var words []string
+			for p.at(lexer.Ident) || p.at(lexer.Text) {
+				words = append(words, p.cur().Val)
+				p.next()
+			}
+			if len(words) > 0 && p.at(lexer.Arrow) {
+				label = strings.Join(words, " ")
+				arrowTok = p.cur()
+				p.next()
+			} else {
+				p.pos = saved // not middle-form; treat as a normal link
+			}
 		}
 
 		to, err := p.parseNodeRef()
