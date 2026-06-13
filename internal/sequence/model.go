@@ -38,14 +38,47 @@ type Message struct {
 	Text  string
 	Arrow Arrow
 
-	// Y is the vertical position of the message line; set during layout.
-	Y float64
+	Row int     // ordinal row in the diagram (messages and notes share rows)
+	Y   float64 // vertical position of the message line; set during layout
+}
+
+// NotePos is where a note sits relative to its participant(s).
+type NotePos int
+
+const (
+	// NoteRight places the note to the right of a participant.
+	NoteRight NotePos = iota
+	// NoteLeft places the note to the left of a participant.
+	NoteLeft
+	// NoteOver spans the note over one or two participants.
+	NoteOver
+)
+
+// Note is an annotation box occupying its own row.
+type Note struct {
+	Pos  NotePos
+	Of   []string
+	Text string
+
+	Row int
+	Y   float64
+}
+
+// Bar is an activation lifespan on a participant's lifeline, in rows.
+type Bar struct {
+	Participant string
+	StartRow    int
+	EndRow      int
 }
 
 // Diagram is a parsed sequence diagram.
 type Diagram struct {
 	Participants []*Participant
 	Messages     []*Message
+	Notes        []*Note
+	Bars         []*Bar
+
+	rows int // number of allocated rows
 }
 
 // participant returns the participant with id, or nil.

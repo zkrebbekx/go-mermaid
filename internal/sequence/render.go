@@ -58,11 +58,17 @@ func svg(lay *Layout, o RenderOptions) []byte {
 	for _, p := range lay.Diagram.Participants {
 		writeLifeline(&b, p, lay, pal)
 	}
+	for _, bar := range lay.Diagram.Bars {
+		writeBar(&b, bar, lay, pal)
+	}
 	for _, p := range lay.Diagram.Participants {
 		writeHeader(&b, p, lay, pal, o)
 	}
 	for _, m := range lay.Diagram.Messages {
 		writeMessage(&b, m, lay, pal)
+	}
+	for _, n := range lay.Diagram.Notes {
+		writeNote(&b, n, lay, pal, o)
 	}
 
 	b.WriteString("  </g>\n</svg>\n")
@@ -131,6 +137,35 @@ func writeMsgText(b *strings.Builder, text string, x, y float64, pal theme.Palet
 	}
 	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="%s">%s</text>`,
 		svgutil.Num(x), svgutil.Num(y), pal.Text, anchor, svgutil.Esc(text))
+	b.WriteByte('\n')
+}
+
+// writeBar draws an activation bar on a participant's lifeline.
+func writeBar(b *strings.Builder, bar *Bar, lay *Layout, pal theme.Palette) {
+	p := lay.Diagram.participant(bar.Participant)
+	if p == nil {
+		return
+	}
+	y1 := rowY(lay, bar.StartRow)
+	y2 := rowY(lay, bar.EndRow)
+	if y2-y1 < msgGap/2 {
+		y2 = y1 + msgGap/2
+	}
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="8" height="%s" fill="%s" stroke="%s"/>`,
+		svgutil.Num(p.X-4), svgutil.Num(y1), svgutil.Num(y2-y1), pal.NodeFill, pal.NodeStroke)
+	b.WriteByte('\n')
+}
+
+// writeNote draws a note box and its text.
+func writeNote(b *strings.Builder, n *Note, lay *Layout, pal theme.Palette, o RenderOptions) {
+	x, w := noteBox(lay.Diagram, n, o.FontSize)
+	h := o.FontSize + 12
+	y := n.Y - h/2
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s"/>`,
+		svgutil.Num(x), svgutil.Num(y), svgutil.Num(w), svgutil.Num(h), "#FFF5AD", pal.NodeStroke)
+	b.WriteByte('\n')
+	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle">%s</text>`,
+		svgutil.Num(x+w/2), svgutil.Num(y+h/2+o.FontSize*0.35), pal.Text, svgutil.Esc(n.Text))
 	b.WriteByte('\n')
 }
 

@@ -42,15 +42,19 @@ func Compute(d *Diagram, opts Options) *Layout {
 	}
 
 	lifelineTop := headerHeight
-	firstMsgY := lifelineTop + topMargin + msgGap/2
-	for i, m := range d.Messages {
-		m.Y = firstMsgY + float64(i)*msgGap
+	firstY := lifelineTop + topMargin + msgGap/2
+	for _, m := range d.Messages {
+		m.Y = firstY + float64(m.Row)*msgGap
+	}
+	for _, n := range d.Notes {
+		n.Y = firstY + float64(n.Row)*msgGap
 	}
 
-	height := lifelineTop + topMargin + float64(len(d.Messages))*msgGap + msgGap/2
-	if len(d.Messages) == 0 {
-		height = lifelineTop + topMargin + msgGap
+	rows := d.rows
+	if rows == 0 {
+		rows = 1
 	}
+	height := lifelineTop + topMargin + float64(rows)*msgGap + msgGap/2
 
 	width := x - colGap // drop trailing gap after the last participant
 	if width < 0 {
@@ -64,6 +68,12 @@ func Compute(d *Diagram, opts Options) *Layout {
 			}
 		}
 	}
+	// Notes to the right of / over the last participant can extend the width.
+	for _, n := range d.Notes {
+		if r := noteRight(d, n, opts.FontSize); r > width {
+			width = r
+		}
+	}
 
 	return &Layout{
 		Diagram:      d,
@@ -73,4 +83,50 @@ func Compute(d *Diagram, opts Options) *Layout {
 		LifelineTop:  lifelineTop,
 		LifelineEnd:  height,
 	}
+}
+
+// rowY returns the vertical center of a row (matching message Y).
+func rowY(lay *Layout, row int) float64 {
+	return lay.LifelineTop + topMargin + msgGap/2 + float64(row)*msgGap
+}
+
+// noteWidth estimates a note box width from its text.
+func noteWidth(text string, fontSize float64) float64 {
+	w := float64(len([]rune(text)))*fontSize*0.6 + 20
+	if w < 60 {
+		w = 60
+	}
+	return w
+}
+
+// noteBox returns the left x and width of a note's box.
+func noteBox(d *Diagram, n *Note, fontSize float64) (x, w float64) {
+	w = noteWidth(n.Text, fontSize)
+	switch n.Pos {
+	case NoteRight:
+		if p := d.participant(n.Of[0]); p != nil {
+			x = p.X + 12
+		}
+	case NoteLeft:
+		if p := d.participant(n.Of[0]); p != nil {
+			x = p.X - 12 - w
+		}
+	default: // NoteOver
+		p1 := d.participant(n.Of[0])
+		p2 := d.participant(n.Of[len(n.Of)-1])
+		if p1 == nil || p2 == nil {
+			return x, w
+		}
+		lo, hi := min(p1.X, p2.X), max(p1.X, p2.X)
+		if span := hi - lo + 40; span > w {
+			w = span
+		}
+		x = (lo+hi)/2 - w/2
+	}
+	return x, w
+}
+
+func noteRight(d *Diagram, n *Note, fontSize float64) float64 {
+	x, w := noteBox(d, n, fontSize)
+	return x + w
 }
