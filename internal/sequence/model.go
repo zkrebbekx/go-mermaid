@@ -71,12 +71,28 @@ type Bar struct {
 	EndRow      int
 }
 
+// Section is an else/and divider inside a frame.
+type Section struct {
+	Row   int
+	Label string
+}
+
+// Frame is a grouping box (loop/alt/opt/par/rect/critical/break) spanning rows.
+type Frame struct {
+	Type     string
+	Label    string
+	StartRow int
+	EndRow   int
+	Sections []*Section
+}
+
 // Diagram is a parsed sequence diagram.
 type Diagram struct {
 	Participants []*Participant
 	Messages     []*Message
 	Notes        []*Note
 	Bars         []*Bar
+	Frames       []*Frame
 
 	rows int // number of allocated rows
 }

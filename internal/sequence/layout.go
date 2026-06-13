@@ -74,6 +74,10 @@ func Compute(d *Diagram, opts Options) *Layout {
 			width = r
 		}
 	}
+	// Frame boxes inset slightly past the outer participants.
+	if len(d.Frames) > 0 {
+		width += 12
+	}
 
 	return &Layout{
 		Diagram:      d,

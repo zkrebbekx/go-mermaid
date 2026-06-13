@@ -61,6 +61,9 @@ func svg(lay *Layout, o RenderOptions) []byte {
 	for _, bar := range lay.Diagram.Bars {
 		writeBar(&b, bar, lay, pal)
 	}
+	for _, f := range lay.Diagram.Frames {
+		writeFrame(&b, f, lay, pal, o)
+	}
 	for _, p := range lay.Diagram.Participants {
 		writeHeader(&b, p, lay, pal, o)
 	}
@@ -138,6 +141,60 @@ func writeMsgText(b *strings.Builder, text string, x, y float64, pal theme.Palet
 	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="%s">%s</text>`,
 		svgutil.Num(x), svgutil.Num(y), pal.Text, anchor, svgutil.Esc(text))
 	b.WriteByte('\n')
+}
+
+// writeFrame draws a grouping frame (loop/alt/opt/...) with a label tab and
+// any else/and section dividers.
+func writeFrame(b *strings.Builder, f *Frame, lay *Layout, pal theme.Palette, o RenderOptions) {
+	if f.EndRow < f.StartRow {
+		return
+	}
+	ps := lay.Diagram.Participants
+	if len(ps) == 0 {
+		return
+	}
+	minX := ps[0].X - ps[0].Width/2
+	maxX := ps[0].X + ps[0].Width/2
+	for _, p := range ps {
+		if l := p.X - p.Width/2; l < minX {
+			minX = l
+		}
+		if r := p.X + p.Width/2; r > maxX {
+			maxX = r
+		}
+	}
+	x, w := minX-10, (maxX-minX)+20
+	top := rowY(lay, f.StartRow) - 16
+	bot := rowY(lay, f.EndRow) + 14
+
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="none" stroke="%s" stroke-dasharray="2,2"/>`,
+		svgutil.Num(x), svgutil.Num(top), svgutil.Num(w), svgutil.Num(bot-top), pal.NodeStroke)
+	b.WriteByte('\n')
+
+	tabW := float64(len([]rune(f.Type)))*o.FontSize*0.6 + 12
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s"/>`,
+		svgutil.Num(x), svgutil.Num(top), svgutil.Num(tabW), svgutil.Num(o.FontSize+6), pal.NodeFill, pal.NodeStroke)
+	b.WriteByte('\n')
+	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" font-weight="bold">%s</text>`,
+		svgutil.Num(x+6), svgutil.Num(top+o.FontSize), pal.Text, svgutil.Esc(f.Type))
+	b.WriteByte('\n')
+	if f.Label != "" {
+		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s">%s</text>`,
+			svgutil.Num(x+tabW+6), svgutil.Num(top+o.FontSize), pal.Text, svgutil.Esc("["+f.Label+"]"))
+		b.WriteByte('\n')
+	}
+
+	for _, s := range f.Sections {
+		sy := rowY(lay, s.Row) - msgGap/2
+		fmt.Fprintf(b, `    <line x1="%s" y1="%s" x2="%s" y2="%s" stroke="%s" stroke-dasharray="2,2"/>`,
+			svgutil.Num(x), svgutil.Num(sy), svgutil.Num(x+w), svgutil.Num(sy), pal.NodeStroke)
+		b.WriteByte('\n')
+		if s.Label != "" {
+			fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s">%s</text>`,
+				svgutil.Num(x+6), svgutil.Num(sy+o.FontSize), pal.Text, svgutil.Esc("["+s.Label+"]"))
+			b.WriteByte('\n')
+		}
+	}
 }
 
 // writeBar draws an activation bar on a participant's lifeline.

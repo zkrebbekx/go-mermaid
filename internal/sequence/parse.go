@@ -22,17 +22,21 @@ var arrowTokens = []struct {
 	{"-)", Arrow{Dashed: false, Head: HeadArrow}},
 }
 
-// blockKeywords are recognized control keywords whose lines are skipped until
-// their rendering is implemented (loops, alternatives, etc.).
+// frameKeywords open a grouping frame.
+var frameKeywords = map[string]bool{
+	"loop": true, "alt": true, "opt": true, "par": true,
+	"rect": true, "critical": true, "break": true,
+}
+
+// blockKeywords are recognized but not drawn (skipped) keywords.
 var blockKeywords = map[string]bool{
-	"loop": true, "alt": true, "opt": true, "else": true, "end": true,
-	"autonumber": true, "par": true, "and": true, "rect": true,
-	"critical": true, "break": true, "box": true,
+	"autonumber": true, "box": true,
 }
 
 type parser struct {
-	d   *Diagram
-	act map[string][]int // activation start-row stack per participant
+	d      *Diagram
+	act    map[string][]int // activation start-row stack per participant
+	frames []*Frame         // open frame stack
 }
 
 // Parse builds a Diagram from sequence diagram source.
@@ -69,6 +73,21 @@ func Parse(src string) (*Diagram, error) {
 			p.activate(strings.TrimSpace(line[len("activate"):]), p.d.rows)
 		case kw == "deactivate":
 			p.deactivate(strings.TrimSpace(line[len("deactivate"):]), p.d.rows)
+		case frameKeywords[kw]:
+			f := &Frame{Type: kw, Label: strings.TrimSpace(line[len(kw):]), StartRow: p.d.rows}
+			p.d.Frames = append(p.d.Frames, f)
+			p.frames = append(p.frames, f)
+		case kw == "else" || kw == "and":
+			if n := len(p.frames); n > 0 {
+				top := p.frames[n-1]
+				top.Sections = append(top.Sections, &Section{Row: p.d.rows, Label: strings.TrimSpace(line[len(kw):])})
+			}
+		case kw == "end":
+			if n := len(p.frames); n > 0 {
+				top := p.frames[n-1]
+				top.EndRow = p.d.rows - 1
+				p.frames = p.frames[:n-1]
+			}
 		case blockKeywords[kw]:
 			continue
 		default:
