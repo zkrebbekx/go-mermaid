@@ -80,9 +80,12 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal palette) {
 	b.WriteByte('\n')
 
 	if e.Label != "" {
-		mid := e.Points[len(e.Points)/2]
+		// Midpoint of the polyline's endpoints, not Points[len/2] (which is
+		// the target endpoint for a two-point line).
+		first, last := e.Points[0], e.Points[len(e.Points)-1]
+		midX, midY := (first.X+last.X)/2, (first.Y+last.Y)/2
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
-			num(mid.X), num(mid.Y), pal.Text, esc(e.Label))
+			num(midX), num(midY), pal.Text, esc(e.Label))
 		b.WriteByte('\n')
 	}
 }

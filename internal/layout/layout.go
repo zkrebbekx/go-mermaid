@@ -6,6 +6,8 @@
 package layout
 
 import (
+	"math"
+
 	"github.com/Zac300/go-mermaid/internal/domain"
 )
 
@@ -33,8 +35,10 @@ func Compute(g *domain.Graph, opts Options) (*Result, error) {
 	layers := orderLayers(g, ranks)
 
 	w, h := position(g, layers, opts)
-	routeEdges(g)
+	// Restore original edge directions before routing so arrowheads point
+	// the right way on edges that were reversed to break cycles.
 	restoreReversed(g, reversed)
+	routeEdges(g)
 
 	return &Result{Graph: g, Width: w, Height: h}, nil
 }
@@ -60,8 +64,10 @@ func sizeNodes(g *domain.Graph, opts Options) {
 	}
 }
 
-// routeEdges sets a straight two-point polyline between node centers.
-// Proper orthogonal/spline routing is a later refinement.
+// routeEdges sets a straight two-point polyline running from the boundary of
+// the source box to the boundary of the target box, so arrowheads land on the
+// node edge rather than hidden under its center. Orthogonal/spline routing is
+// a later refinement.
 func routeEdges(g *domain.Graph) {
 	for _, e := range g.Edges {
 		from := g.NodeByID(e.From)
@@ -69,6 +75,28 @@ func routeEdges(g *domain.Graph) {
 		if from == nil || to == nil {
 			continue
 		}
-		e.Points = []domain.Point{from.Center(), to.Center()}
+		fc, tc := from.Center(), to.Center()
+		start := clipToBox(fc, from.Size, tc)
+		end := clipToBox(tc, to.Size, fc)
+		e.Points = []domain.Point{start, end}
 	}
+}
+
+// clipToBox returns the point where the segment from center toward target
+// crosses the boundary of an axis-aligned box of the given size centered at
+// center. If target coincides with center, center is returned.
+func clipToBox(center domain.Point, size domain.Size, target domain.Point) domain.Point {
+	dx, dy := target.X-center.X, target.Y-center.Y
+	if dx == 0 && dy == 0 {
+		return center
+	}
+	hw, hh := size.W/2, size.H/2
+	t := math.Inf(1)
+	if dx != 0 {
+		t = math.Min(t, hw/math.Abs(dx))
+	}
+	if dy != 0 {
+		t = math.Min(t, hh/math.Abs(dy))
+	}
+	return domain.Point{X: center.X + dx*t, Y: center.Y + dy*t}
 }

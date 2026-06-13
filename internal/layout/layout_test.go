@@ -50,6 +50,25 @@ func TestCompute(t *testing.T) {
 		})
 	})
 
+	Convey("Given a top-down edge A->B", t, func() {
+		g := graphFrom("graph TD\nA --> B")
+
+		Convey("When computing the layout", func() {
+			_, err := Compute(g, opts)
+
+			Convey("Then the edge endpoints sit on the node boundaries, not centers", func() {
+				So(err, ShouldBeNil)
+				a, b := g.NodeByID("A"), g.NodeByID("B")
+				e := g.Edges[0]
+				start, end := e.Points[0], e.Points[len(e.Points)-1]
+				// Leaves the bottom of A, lands on the top of B.
+				So(start.Y, ShouldEqual, a.Pos.Y+a.Size.H)
+				So(end.Y, ShouldEqual, b.Pos.Y)
+				So(end.Y, ShouldNotEqual, b.Center().Y)
+			})
+		})
+	})
+
 	Convey("Given a left-right chain", t, func() {
 		g := graphFrom("graph LR\nA --> B --> C")
 
