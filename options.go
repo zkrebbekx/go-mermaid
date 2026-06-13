@@ -40,6 +40,7 @@ func DiagramTypes() []string {
 		"timeline",
 		"mindmap",
 		"gantt",
+		"C4Context / C4Container",
 	}
 }
 

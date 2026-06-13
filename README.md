@@ -114,6 +114,10 @@ The renderer dispatches on the diagram header. Status vs. Mermaid:
 | Timeline | `timeline` | sections, periods, events |
 | Mindmap | `mindmap` | indentation hierarchy |
 | Gantt | `gantt` | dates, durations, `after` deps |
+| C4 | `C4Context` / `C4Container` | people, systems, relationships |
+
+Flowchart extras: curved edges (`WithCurvedEdges`), clickable nodes
+(`click ID href`).
 
 Unsupported types return `ErrUnsupported`. A `---`/`title:` front-matter block
 and `accTitle:`/`accDescr:` (SVG `<title>`/`<desc>`) are honored for all types.
