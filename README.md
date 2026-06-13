@@ -92,7 +92,22 @@ if errors.Is(err, mermaid.ErrParse) {
 
 Sentinels: `ErrParse`, `ErrLayout`, `ErrRender`, `ErrUnsupported`.
 
-## Supported syntax (v0)
+## Diagram types
+
+The renderer dispatches on the diagram header. Status vs. Mermaid:
+
+| Type | Status |
+| --- | --- |
+| Flowchart (`graph` / `flowchart`) | ✅ supported |
+| Sequence (`sequenceDiagram`) | ✅ supported |
+| Class (`classDiagram`) | ⏳ planned |
+| State (`stateDiagram-v2`) | ⏳ planned |
+| Entity-relationship (`erDiagram`) | ⏳ planned |
+| Gantt / Pie / Git / others | ⏳ planned |
+
+Unsupported types return `ErrUnsupported`.
+
+### Flowchart syntax
 
 | Feature | Example |
 | --- | --- |
@@ -109,26 +124,43 @@ Sentinels: `ErrParse`, `ErrLayout`, `ErrRender`, `ErrUnsupported`.
 | Edge label | `A -->\|text\| B` |
 | Comments | `%% comment` |
 
+### Sequence syntax
+
+| Feature | Example |
+| --- | --- |
+| Participant | `participant A` / `actor A` |
+| Alias | `participant A as Alice` |
+| Message + arrowhead | `A->>B: text` |
+| Reply (dashed) | `B-->>A: text` |
+| Plain line | `A->B` / `A-->B` |
+| Cross end | `A-xB` / `A--xB` |
+| Self-message | `A->>A: text` |
+
+Notes, loops, alt/opt and activations are parsed but not yet drawn (skipped).
+
 ## Roadmap
 
-- [ ] Network-simplex ranking (tighter layouts)
+- [ ] Network-simplex ranking (tighter flowchart layouts)
 - [ ] Crossing minimization (median/barycenter ordering)
 - [ ] Orthogonal/spline edge routing
-- [ ] Subgraphs
-- [ ] Sequence diagrams
-- [ ] Class diagrams
+- [ ] Flowchart subgraphs
+- [x] Sequence diagrams
+- [ ] Sequence notes / loops / alt / activations
+- [ ] Class, state, ER diagrams
 - [ ] PNG output
 
 ## Architecture
 
-A small, testable pipeline:
+Each diagram type has a self-contained pipeline; the public `Render` dispatches
+on the header. The flowchart pipeline is:
 
 ```
 source → lexer → parser → domain.Graph → layout → render → SVG
 ```
 
-The `internal/domain` package holds the pure model; each stage is an adapter
-that produces or consumes it. See [CONTRIBUTING.md](CONTRIBUTING.md).
+`internal/domain` holds the flowchart model; `internal/sequence` is the
+self-contained sequence pipeline; `internal/theme` and `internal/svgutil` are
+shared by all renderers. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Releasing
 

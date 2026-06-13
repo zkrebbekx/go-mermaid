@@ -8,6 +8,7 @@ import (
 
 	"github.com/Zac300/go-mermaid/internal/domain"
 	"github.com/Zac300/go-mermaid/internal/layout"
+	"github.com/Zac300/go-mermaid/internal/theme"
 )
 
 // Options controls SVG appearance.
@@ -20,7 +21,7 @@ type Options struct {
 
 // SVG renders a laid-out graph to an SVG document.
 func SVG(res *layout.Result, opts Options) ([]byte, error) {
-	pal := paletteFor(opts.Theme)
+	pal := theme.For(opts.Theme)
 	pad := opts.Padding
 	w := res.Width + pad*2
 	h := res.Height + pad*2
@@ -51,7 +52,7 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
-func writeEdge(b *strings.Builder, e *domain.Edge, pal palette) {
+func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -90,7 +91,7 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal palette) {
 	}
 }
 
-func writeNode(b *strings.Builder, n *domain.Node, pal palette, opts Options) {
+func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Options) {
 	x, y, w, h := n.Pos.X, n.Pos.Y, n.Size.W, n.Size.H
 	switch n.Shape {
 	case domain.ShapeRound, domain.ShapeStadium:

@@ -38,12 +38,29 @@ func TestRender(t *testing.T) {
 		})
 
 		Convey("When the source has a syntax error", func() {
-			_, err := mermaid.Render("not a diagram {{{")
+			_, err := mermaid.Render("graph TD\nA[unterminated")
 
 			Convey("Then ErrParse matches and a ParseError is recoverable", func() {
 				So(errors.Is(err, mermaid.ErrParse), ShouldBeTrue)
 				var pe *mermaid.ParseError
 				So(errors.As(err, &pe), ShouldBeTrue)
+			})
+		})
+
+		Convey("When rendering a sequence diagram", func() {
+			out, err := mermaid.Render("sequenceDiagram\nA->>B: hi")
+
+			Convey("Then it dispatches to the sequence renderer", func() {
+				So(err, ShouldBeNil)
+				So(string(out), ShouldContainSubstring, "seq-arrow")
+			})
+		})
+
+		Convey("When the diagram type is unsupported", func() {
+			_, err := mermaid.Render("classDiagram\n  Animal <|-- Dog")
+
+			Convey("Then ErrUnsupported is returned", func() {
+				So(errors.Is(err, mermaid.ErrUnsupported), ShouldBeTrue)
 			})
 		})
 	})

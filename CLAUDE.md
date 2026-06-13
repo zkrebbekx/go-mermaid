@@ -16,16 +16,22 @@ A linear, testable pipeline. Each stage produces or consumes the pure model in
 source → lexer → parser → domain.Graph → layout → render → SVG
 ```
 
-| Package            | Responsibility                                            |
-| ------------------ | --------------------------------------------------------- |
-| `internal/domain`  | Pure model (Graph, Node, Edge, geometry). No I/O, no deps. |
-| `internal/lexer`   | Source text → tokens.                                      |
-| `internal/parser`  | Tokens → `domain.Graph`.                                   |
-| `internal/layout`  | Sugiyama layout: acyclic → rank → order → position.        |
-| `internal/render`  | Laid-out graph → SVG bytes.                                |
-| `internal/syntax`  | Shared positional error type.                             |
-| `.` (root)         | Public API: `Render`, options, sentinel errors.           |
-| `cmd/mermaid`      | CLI wrapper over the library.                              |
+| Package             | Responsibility                                             |
+| ------------------- | ---------------------------------------------------------- |
+| `internal/domain`   | Pure flowchart model (Graph, Node, Edge, geometry). No I/O. |
+| `internal/lexer`    | Flowchart source text → tokens.                            |
+| `internal/parser`   | Tokens → `domain.Graph`.                                   |
+| `internal/layout`   | Sugiyama layout: acyclic → rank → order → position.        |
+| `internal/render`   | Laid-out flowchart graph → SVG bytes.                      |
+| `internal/sequence` | Self-contained sequence pipeline: parse → layout → render. |
+| `internal/theme`    | Shared color palettes (all diagram types).                 |
+| `internal/svgutil`  | Shared SVG helpers (number formatting, XML escaping).      |
+| `internal/syntax`   | Shared positional error type.                              |
+| `.` (root)          | Public API: `Render`, diagram-type dispatch, options, errors. |
+| `cmd/mermaid`       | CLI wrapper over the library.                              |
+
+New diagram types follow the `internal/sequence` shape: a self-contained
+package (parse → layout → render) wired into the root `detectKind` dispatch.
 
 Keep stages decoupled. A rendering change must not require touching the parser,
 and vice versa. New dependencies between `internal/*` packages should follow the

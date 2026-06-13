@@ -27,6 +27,7 @@ import (
 	"github.com/Zac300/go-mermaid/internal/lexer"
 	"github.com/Zac300/go-mermaid/internal/parser"
 	"github.com/Zac300/go-mermaid/internal/render"
+	"github.com/Zac300/go-mermaid/internal/sequence"
 	"github.com/Zac300/go-mermaid/internal/syntax"
 )
 
@@ -46,6 +47,26 @@ func Render(src string, opts ...Option) ([]byte, error) {
 		opt(&cfg)
 	}
 
+	switch detectKind(src) {
+	case kindFlowchart:
+		return renderFlowchart(src, cfg)
+	case kindSequence:
+		svg, err := sequence.Render(src, sequence.RenderOptions{
+			Theme:    string(cfg.theme),
+			FontFace: cfg.fontFace,
+			FontSize: cfg.fontSize,
+			Padding:  cfg.padding,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrParse, err)
+		}
+		return svg, nil
+	default:
+		return nil, fmt.Errorf("%w: unrecognized diagram type", ErrUnsupported)
+	}
+}
+
+func renderFlowchart(src string, cfg config) ([]byte, error) {
 	tokens, err := lexer.Lex(src)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrParse, err)

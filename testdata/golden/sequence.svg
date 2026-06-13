@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="206" height="202" viewBox="0 0 206 202" font-family="sans-serif" font-size="14">
+  <defs><marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker></defs>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g transform="translate(16,16)">
+    <line x1="37" y1="32" x2="37" y2="170" stroke="#333333" stroke-dasharray="3,3"/>
+    <line x1="144" y1="32" x2="144" y2="170" stroke="#333333" stroke-dasharray="3,3"/>
+    <rect x="0" y="0" width="74" height="32" rx="3" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="37" y="20.9" fill="#333333" text-anchor="middle">Alice</text>
+    <rect x="114" y="0" width="60" height="32" rx="3" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="144" y="20.9" fill="#333333" text-anchor="middle">Bob</text>
+    <line x1="37" y1="62" x2="144" y2="62" stroke="#333333" marker-end="url(#seq-arrow)"/>
+    <text x="90.5" y="58" fill="#333333" text-anchor="middle">Request</text>
+    <line x1="144" y1="98" x2="37" y2="98" stroke="#333333" stroke-dasharray="6,4" marker-end="url(#seq-arrow)"/>
+    <text x="90.5" y="94" fill="#333333" text-anchor="middle">Response</text>
+    <path d="M37,134 L81,134 L81,146 L37,146" fill="none" stroke="#333333" marker-end="url(#seq-arrow)"/>
+    <text x="87" y="140" fill="#333333" text-anchor="start">Process</text>
+  </g>
+</svg>
