@@ -50,11 +50,24 @@ func run() error {
 	out := flag.String("o", "", "output file (single-input mode only; default stdout)")
 	padding := flag.Float64("padding", 16, "outer padding in pixels")
 	showVersion := flag.Bool("version", false, "print version and exit")
+	listThemes := flag.Bool("list-themes", false, "list available themes and exit")
+	listTypes := flag.Bool("list-types", false, "list supported diagram types and exit")
 	flag.Usage = usage
 	flag.Parse()
 
-	if *showVersion {
+	switch {
+	case *showVersion:
 		fmt.Println("mermaid", version)
+		return nil
+	case *listThemes:
+		for _, t := range mermaid.Themes() {
+			fmt.Println(t)
+		}
+		return nil
+	case *listTypes:
+		for _, t := range mermaid.DiagramTypes() {
+			fmt.Println(t)
+		}
 		return nil
 	}
 

@@ -25,6 +25,24 @@ const (
 // Themes returns the names of all built-in themes.
 func Themes() []string { return theme.Names() }
 
+// DiagramTypes returns the diagram header keywords this library can render.
+func DiagramTypes() []string {
+	return []string{
+		"graph / flowchart",
+		"sequenceDiagram",
+		"classDiagram",
+		"stateDiagram-v2",
+		"erDiagram",
+		"pie",
+		"journey",
+		"quadrantChart",
+		"gitGraph",
+		"timeline",
+		"mindmap",
+		"gantt",
+	}
+}
+
 // Option configures a Render call. Options are applied in order; later
 // options override earlier ones.
 type Option func(*config)
