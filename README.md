@@ -99,13 +99,17 @@ The renderer dispatches on the diagram header. Status vs. Mermaid:
 | Type | Status |
 | --- | --- |
 | Flowchart (`graph` / `flowchart`) | ✅ supported |
-| Sequence (`sequenceDiagram`) | ✅ supported |
-| Class (`classDiagram`) | ⏳ planned |
-| State (`stateDiagram-v2`) | ⏳ planned |
-| Entity-relationship (`erDiagram`) | ⏳ planned |
-| Gantt / Pie / Git / others | ⏳ planned |
+| Sequence (`sequenceDiagram`) | ✅ supported (notes, activations) |
+| Class (`classDiagram`) | ✅ supported |
+| State (`stateDiagram-v2`) | ✅ supported |
+| Entity-relationship (`erDiagram`) | ✅ supported |
+| Pie (`pie`) | ✅ supported |
+| Gantt / Git / C4 / others | ⏳ planned |
 
-Unsupported types return `ErrUnsupported`.
+Unsupported types return `ErrUnsupported`. A `---`/`title:` front-matter block
+is honored for all types.
+
+Rendering is fast — roughly 10–50µs per diagram with no external processes.
 
 ### Flowchart syntax
 
@@ -144,11 +148,14 @@ Notes, loops, alt/opt and activations are parsed but not yet drawn (skipped).
 - [x] Barycenter x-positioning (parents centered over children)
 - [x] Multi-rank edge bends and self-loops
 - [x] Sequence diagrams
+- [x] Orthogonal edge routing
+- [x] Sequence notes and activations
+- [x] Class, state, ER, and pie diagrams
+- [x] Front-matter titles
 - [ ] Network-simplex ranking (tighter flowchart layouts)
-- [ ] Orthogonal/spline edge routing (edges are straight segments today)
-- [ ] Flowchart subgraphs
-- [ ] Sequence notes / loops / alt / activations
-- [ ] Class, state, ER diagrams
+- [ ] Spline edge routing
+- [ ] Flowchart subgraphs; sequence loops / alt
+- [ ] Gantt, git, C4 diagrams
 - [ ] PNG output
 
 ## Architecture
