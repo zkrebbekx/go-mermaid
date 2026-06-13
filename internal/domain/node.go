@@ -17,6 +17,8 @@ type Node struct {
 	Shape Shape
 	// Style holds optional color overrides; nil means use the theme.
 	Style *Style
+	// Link, when set, wraps the node in an SVG hyperlink (click ID href URL).
+	Link string
 
 	// Pos is the laid-out top-left position. Zero until layout runs.
 	Pos Point

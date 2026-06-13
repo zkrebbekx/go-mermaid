@@ -16,9 +16,10 @@ type classAssign struct {
 // inline :::class) out of the source. It returns the source with those
 // directives removed (so the lexer never sees their CSS-like payloads) and a
 // map of node ID to resolved Style. Directive order does not matter.
-func Preprocess(src string) (string, map[string]*domain.Style) {
+func Preprocess(src string) (string, map[string]*domain.Style, map[string]string) {
 	classDefs := map[string]*domain.Style{}
 	styles := map[string]*domain.Style{}
+	links := map[string]string{}
 
 	var pending []classAssign
 
@@ -42,6 +43,10 @@ func Preprocess(src string) (string, map[string]*domain.Style) {
 			if id != "" {
 				mergeStyle(styles, id, st)
 			}
+		case strings.HasPrefix(t, "click "):
+			if id, url := parseClick(t); id != "" && url != "" {
+				links[id] = url
+			}
 		default:
 			kept = append(kept, stripInline(line, &pending))
 		}
@@ -56,7 +61,22 @@ func Preprocess(src string) (string, map[string]*domain.Style) {
 			mergeStyle(styles, strings.TrimSpace(id), st)
 		}
 	}
-	return strings.Join(kept, "\n"), styles
+	return strings.Join(kept, "\n"), styles, links
+}
+
+// parseClick handles "click ID href "URL"" and "click ID "URL"".
+func parseClick(line string) (id, url string) {
+	rest := strings.Fields(strings.TrimSpace(line[len("click"):]))
+	if len(rest) < 1 {
+		return "", ""
+	}
+	id = rest[0]
+	if i := strings.IndexByte(line, '"'); i >= 0 {
+		if j := strings.IndexByte(line[i+1:], '"'); j >= 0 {
+			url = line[i+1 : i+1+j]
+		}
+	}
+	return id, url
 }
 
 // stripInline removes ":::class" occurrences, recording each as an assignment

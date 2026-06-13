@@ -194,6 +194,10 @@ func writeSubgraph(b *strings.Builder, sg *domain.Subgraph, g *domain.Graph, pal
 }
 
 func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Options) {
+	if n.Link != "" {
+		fmt.Fprintf(b, `    <a href="%s" target="_blank">`, esc(n.Link))
+		b.WriteByte('\n')
+	}
 	x, y, w, h := n.Pos.X, n.Pos.Y, n.Size.W, n.Size.H
 	fill, stroke, textColor := pal.NodeFill, pal.NodeStroke, pal.Text
 	if n.Style != nil {
@@ -277,4 +281,7 @@ func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Optio
 	b.WriteString("    ")
 	svgutil.MultilineText(b, svgutil.SplitLines(label), x+w/2, y+h/2+opts.FontSize*0.35, opts.FontSize+2, textColor, "")
 	b.WriteByte('\n')
+	if n.Link != "" {
+		b.WriteString("    </a>\n")
+	}
 }
