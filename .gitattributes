@@ -1,0 +1,6 @@
+# Normalize line endings to LF on checkout across platforms. Golden SVG
+# files and diagram sources must stay LF so Windows CI matches them.
+* text=auto eol=lf
+*.png binary
+*.gif binary
+*.jpg binary
