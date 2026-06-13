@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="467.2" height="303.6" viewBox="0 0 467.2 303.6" font-family="sans-serif" font-size="14">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="136" y="30" fill="#333333" text-anchor="middle" font-weight="bold">Pets adopted</text>
+  <path d="M136,167.6 L136,47.6 A120,120 0 1 1 20.61,134.67 Z" fill="#5B8FF9" stroke="#ffffff"/>
+  <path d="M136,167.6 L20.61,134.67 A120,120 0 0 1 112.87,49.85 Z" fill="#61DDAA" stroke="#ffffff"/>
+  <path d="M136,167.6 L112.87,49.85 A120,120 0 0 1 136,47.6 Z" fill="#65789B" stroke="#ffffff"/>
+  <rect x="280" y="47.6" width="14" height="14" fill="#5B8FF9"/>
+  <text x="300" y="59.5" fill="#333333">Dogs: 386 (79.4%)</text>
+  <rect x="280" y="69.6" width="14" height="14" fill="#61DDAA"/>
+  <text x="300" y="81.5" fill="#333333">Cats: 85 (17.5%)</text>
+  <rect x="280" y="91.6" width="14" height="14" fill="#65789B"/>
+  <text x="300" y="103.5" fill="#333333">Rats: 15 (3.1%)</text>
+</svg>

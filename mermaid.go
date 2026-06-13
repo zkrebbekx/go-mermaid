@@ -26,6 +26,7 @@ import (
 	"github.com/Zac300/go-mermaid/internal/layout"
 	"github.com/Zac300/go-mermaid/internal/lexer"
 	"github.com/Zac300/go-mermaid/internal/parser"
+	"github.com/Zac300/go-mermaid/internal/pie"
 	"github.com/Zac300/go-mermaid/internal/render"
 	"github.com/Zac300/go-mermaid/internal/sequence"
 	"github.com/Zac300/go-mermaid/internal/syntax"
@@ -54,6 +55,18 @@ func Render(src string, opts ...Option) ([]byte, error) {
 		return renderFlowchart(body, cfg, title)
 	case kindSequence:
 		svg, err := sequence.Render(body, sequence.RenderOptions{
+			Theme:    string(cfg.theme),
+			FontFace: cfg.fontFace,
+			FontSize: cfg.fontSize,
+			Padding:  cfg.padding,
+			Title:    title,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrParse, err)
+		}
+		return svg, nil
+	case kindPie:
+		svg, err := pie.Render(body, pie.RenderOptions{
 			Theme:    string(cfg.theme),
 			FontFace: cfg.fontFace,
 			FontSize: cfg.fontSize,

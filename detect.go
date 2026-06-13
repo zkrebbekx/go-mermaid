@@ -9,6 +9,7 @@ const (
 	kindUnknown kind = iota
 	kindFlowchart
 	kindSequence
+	kindPie
 )
 
 // detectKind inspects the first non-empty, non-comment line and maps its
@@ -26,6 +27,8 @@ func detectKind(src string) kind {
 			return kindFlowchart
 		case "sequencediagram":
 			return kindSequence
+		case "pie":
+			return kindPie
 		default:
 			return kindUnknown
 		}
