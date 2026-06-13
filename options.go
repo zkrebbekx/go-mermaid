@@ -41,6 +41,8 @@ func DiagramTypes() []string {
 		"mindmap",
 		"gantt",
 		"C4Context / C4Container",
+		"requirementDiagram",
+		"sankey-beta",
 	}
 }
 

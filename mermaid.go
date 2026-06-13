@@ -4,8 +4,8 @@
 // Supported diagram types are detected from the source header: flowchart
 // (graph/flowchart), sequenceDiagram, classDiagram, stateDiagram-v2,
 // erDiagram, pie, journey, quadrantChart, gitGraph, timeline, mindmap,
-// gantt, and C4 (C4Context/C4Container). Unsupported types return
-// ErrUnsupported. See DiagramTypes for the current list.
+// gantt, C4 (C4Context/C4Container), requirementDiagram, and sankey-beta.
+// Unsupported types return ErrUnsupported. See DiagramTypes for the list.
 //
 // Basic use:
 //
@@ -41,6 +41,7 @@ import (
 	"github.com/Zac300/go-mermaid/internal/quadrant"
 	"github.com/Zac300/go-mermaid/internal/render"
 	"github.com/Zac300/go-mermaid/internal/requirement"
+	"github.com/Zac300/go-mermaid/internal/sankey"
 	"github.com/Zac300/go-mermaid/internal/sequence"
 	"github.com/Zac300/go-mermaid/internal/state"
 	"github.com/Zac300/go-mermaid/internal/syntax"
@@ -140,6 +141,11 @@ func Render(src string, opts ...Option) (out []byte, err error) {
 		err = wrapParse(err)
 	case kindRequirement:
 		raw, err = requirement.Render(body, requirement.RenderOptions{
+			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
+		})
+		err = wrapParse(err)
+	case kindSankey:
+		raw, err = sankey.Render(body, sankey.RenderOptions{
 			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
 		})
 		err = wrapParse(err)

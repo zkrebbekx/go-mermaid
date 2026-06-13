@@ -21,6 +21,7 @@ const (
 	kindGantt
 	kindC4
 	kindRequirement
+	kindSankey
 )
 
 // detectKind inspects the first non-empty, non-comment line and maps its
@@ -63,6 +64,8 @@ func detectKind(src string) kind {
 			return kindGantt
 		case "requirementdiagram":
 			return kindRequirement
+		case "sankey-beta", "sankey":
+			return kindSankey
 		default:
 			return kindUnknown
 		}

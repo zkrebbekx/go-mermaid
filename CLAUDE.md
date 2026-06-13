@@ -5,9 +5,9 @@ Guidance for AI assistants and contributors working in this repository.
 ## What this is
 
 `go-mermaid` renders Mermaid diagrams to SVG in pure Go — no headless browser,
-no Node, no JavaScript runtime. Supports 13 diagram types (flowchart,
+no Node, no JavaScript runtime. Supports 15 diagram types (flowchart,
 sequence, class, state, ER, pie, journey, quadrant, gitGraph, timeline,
-mindmap, gantt, C4).
+mindmap, gantt, C4, requirement, sankey).
 
 ## Architecture
 
@@ -35,8 +35,9 @@ source → lexer → parser → domain.Graph → layout → render → SVG
 Diagram-type packages (each self-contained: parse → layout/place → render,
 wired into the root `detectKind` dispatch): `internal/sequence`, `class`,
 `state`, `er`, `pie`, `journey`, `quadrant`, `git`, `timeline`, `mindmap`,
-`gantt`. Flowchart is the exception, split across `lexer`/`parser`/`layout`/
-`render`. New types should follow the self-contained package shape.
+`gantt`, `c4`, `requirement`, `sankey`. Flowchart is the exception, split
+across `lexer`/`parser`/`layout`/`render`. New types should follow the
+self-contained package shape.
 
 Keep stages decoupled. A rendering change must not require touching the parser,
 and vice versa. New dependencies between `internal/*` packages should follow the
@@ -144,6 +145,5 @@ The flowchart layout is Sugiyama-style: cycle removal, longest-path ranking,
 median crossing minimization with dummy nodes for long edges, and barycenter
 x-positioning. Edges are orthogonal by default with an optional curved mode.
 Ranking is still longest-path (network-simplex would tighten it). Remaining
-ideas: network-simplex ranking, spline routing, and more diagram types
-(requirement, sankey) plus PNG export. Keep new code behind the existing stage
-interfaces so these land without API churn.
+ideas: network-simplex ranking, spline routing, and PNG export. Keep new code
+behind the existing stage interfaces so these land without API churn.

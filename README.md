@@ -10,7 +10,7 @@ Render [Mermaid](https://mermaid.js.org) diagrams to SVG in **pure Go** — no
 headless browser, no Node.js, no JavaScript runtime. Just a library and a
 single static binary.
 
-> **Status:** pre-1.0, actively developed. 13 diagram types supported (see
+> **Status:** pre-1.0, actively developed. 15 diagram types supported (see
 > the [table below](#diagram-types)). Not affiliated with the Mermaid project;
 > this is an independent, compatible renderer.
 
@@ -115,6 +115,8 @@ The renderer dispatches on the diagram header. Status vs. Mermaid:
 | Mindmap | `mindmap` | indentation hierarchy |
 | Gantt | `gantt` | dates, durations, `after` deps |
 | C4 | `C4Context` / `C4Container` | people, systems, relationships |
+| Requirement | `requirementDiagram` | requirements, elements, typed relations |
+| Sankey | `sankey-beta` | proportional flow bands |
 
 Flowchart extras: curved edges (`WithCurvedEdges`), clickable nodes
 (`click ID href`).
@@ -158,8 +160,9 @@ Rendering is fast — roughly 10–50µs per diagram with no external processes.
 | Plain line | `A->B` / `A-->B` |
 | Cross end | `A-xB` / `A--xB` |
 | Self-message | `A->>A: text` |
-
-Notes, loops, alt/opt and activations are parsed but not yet drawn (skipped).
+| Note | `Note right of A: text`, `Note over A,B: text` |
+| Activation | `A->>+B: ...`, `B-->>-A: ...`, `activate`/`deactivate` |
+| Frames | `loop`/`alt`/`opt`/`par` … `end`, `autonumber` |
 
 ## Roadmap
 
@@ -167,14 +170,13 @@ Notes, loops, alt/opt and activations are parsed but not yet drawn (skipped).
 - [x] Barycenter x-positioning (parents centered over children)
 - [x] Multi-rank edge bends and self-loops
 - [x] Sequence diagrams
-- [x] Orthogonal edge routing, subgraphs, styling, 12 node shapes
+- [x] Orthogonal + curved edge routing, subgraphs, styling, 12 node shapes
 - [x] Sequence notes, activations, loop/alt/opt frames, autonumber
-- [x] 12 diagram types (see table above)
-- [x] Front-matter titles, accessibility (title/desc), 5 themes
+- [x] 15 diagram types (see table above)
+- [x] Front-matter titles, accessibility (title/desc), 5 themes, clickable nodes
 - [x] CLI batch render, `serve` HTTP mode, fuzz-tested parsers
 - [ ] Network-simplex ranking (tighter flowchart layouts)
 - [ ] Spline edge routing
-- [ ] C4, requirement, sankey diagrams
 - [ ] PNG output
 
 ## Architecture

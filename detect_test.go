@@ -18,7 +18,7 @@ func TestDetectKind(t *testing.T) {
 			{"sequence", "sequenceDiagram\nA->>B: hi", kindSequence},
 			{"leading comment", "%% title\nsequenceDiagram\nA->>B: hi", kindSequence},
 			{"leading blank lines", "\n\n  graph TD\nA-->B", kindFlowchart},
-			{"unknown", "sankey-beta\n  a,b,1", kindUnknown},
+			{"unknown", "block-beta\n  a", kindUnknown},
 			{"empty", "", kindUnknown},
 		}
 		for _, c := range cases {
