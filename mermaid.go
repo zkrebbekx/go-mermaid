@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/Zac300/go-mermaid/internal/block"
 	"github.com/Zac300/go-mermaid/internal/c4"
 	"github.com/Zac300/go-mermaid/internal/class"
 	"github.com/Zac300/go-mermaid/internal/er"
@@ -152,6 +153,11 @@ func Render(src string, opts ...Option) (out []byte, err error) {
 		err = wrapParse(err)
 	case kindXYChart:
 		raw, err = xychart.Render(body, xychart.RenderOptions{
+			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
+		})
+		err = wrapParse(err)
+	case kindBlock:
+		raw, err = block.Render(body, block.RenderOptions{
 			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
 		})
 		err = wrapParse(err)

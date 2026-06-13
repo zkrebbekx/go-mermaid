@@ -5,9 +5,9 @@ Guidance for AI assistants and contributors working in this repository.
 ## What this is
 
 `go-mermaid` renders Mermaid diagrams to SVG in pure Go — no headless browser,
-no Node, no JavaScript runtime. Supports 16 diagram types (flowchart,
+no Node, no JavaScript runtime. Supports 17 diagram types (flowchart,
 sequence, class, state, ER, pie, journey, quadrant, gitGraph, timeline,
-mindmap, gantt, C4, requirement, sankey, xychart).
+mindmap, gantt, C4, requirement, sankey, xychart, block).
 
 ## Architecture
 

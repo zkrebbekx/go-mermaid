@@ -23,6 +23,7 @@ const (
 	kindRequirement
 	kindSankey
 	kindXYChart
+	kindBlock
 )
 
 // detectKind inspects the first non-empty, non-comment line and maps its
@@ -69,6 +70,8 @@ func detectKind(src string) kind {
 			return kindSankey
 		case "xychart-beta", "xychart":
 			return kindXYChart
+		case "block-beta", "block":
+			return kindBlock
 		default:
 			return kindUnknown
 		}

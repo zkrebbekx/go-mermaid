@@ -44,6 +44,7 @@ func DiagramTypes() []string {
 		"requirementDiagram",
 		"sankey-beta",
 		"xychart-beta",
+		"block-beta",
 	}
 }
 
