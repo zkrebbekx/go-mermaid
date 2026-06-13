@@ -85,6 +85,51 @@ func TestRunBadSource(t *testing.T) {
 	})
 }
 
+func TestRunBatch(t *testing.T) {
+	Convey("Given multiple input files", t, func() {
+		dir := t.TempDir()
+		a := filepath.Join(dir, "a.mmd")
+		bf := filepath.Join(dir, "b.mmd")
+		So(os.WriteFile(a, []byte("graph TD\nA-->B"), 0o644), ShouldBeNil)
+		So(os.WriteFile(bf, []byte("pie\n\"X\" : 1"), 0o644), ShouldBeNil)
+
+		Convey("When running in batch mode", func() {
+			resetFlags(a, bf)
+			err := run()
+
+			Convey("Then each input is rendered to a sibling .svg", func() {
+				So(err, ShouldBeNil)
+				_, ea := os.Stat(filepath.Join(dir, "a.svg"))
+				_, eb := os.Stat(filepath.Join(dir, "b.svg"))
+				So(ea, ShouldBeNil)
+				So(eb, ShouldBeNil)
+			})
+		})
+
+		Convey("When -o is combined with multiple files", func() {
+			resetFlags("-o", filepath.Join(dir, "x.svg"), a, bf)
+			err := run()
+
+			Convey("Then it returns an error", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
+	})
+}
+
+func TestRunVersion(t *testing.T) {
+	Convey("Given the -version flag", t, func() {
+		Convey("When running", func() {
+			resetFlags("-version")
+			err := run()
+
+			Convey("Then it succeeds without needing input", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
+
 func TestRunMissingFile(t *testing.T) {
 	Convey("Given a path that does not exist", t, func() {
 		Convey("When running", func() {
