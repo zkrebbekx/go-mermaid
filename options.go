@@ -3,6 +3,7 @@ package mermaid
 import (
 	"github.com/Zac300/go-mermaid/internal/layout"
 	"github.com/Zac300/go-mermaid/internal/render"
+	"github.com/Zac300/go-mermaid/internal/theme"
 )
 
 // Theme selects a built-in color palette for rendering.
@@ -15,7 +16,14 @@ const (
 	Dark Theme = "dark"
 	// Neutral is a grayscale palette suitable for print.
 	Neutral Theme = "neutral"
+	// Forest is a green palette.
+	Forest Theme = "forest"
+	// Base is a muted neutral palette.
+	Base Theme = "base"
 )
+
+// Themes returns the names of all built-in themes.
+func Themes() []string { return theme.Names() }
 
 // Option configures a Render call. Options are applied in order; later
 // options override earlier ones.

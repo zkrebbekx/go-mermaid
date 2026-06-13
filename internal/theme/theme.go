@@ -35,6 +35,25 @@ var palettes = map[string]Palette{
 		Text:       "#222222",
 		Edge:       "#555555",
 	},
+	"forest": {
+		Background: "#ffffff",
+		NodeFill:   "#cde498",
+		NodeStroke: "#13540c",
+		Text:       "#13540c",
+		Edge:       "#3a7a2a",
+	},
+	"base": {
+		Background: "#ffffff",
+		NodeFill:   "#e8e8e8",
+		NodeStroke: "#666666",
+		Text:       "#1a1a1a",
+		Edge:       "#444444",
+	},
+}
+
+// Names returns the available theme names in a stable order.
+func Names() []string {
+	return []string{"default", "dark", "neutral", "forest", "base"}
 }
 
 // For returns the palette for name, or the default palette if name is unknown.
