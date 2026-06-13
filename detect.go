@@ -18,6 +18,7 @@ const (
 	kindGit
 	kindTimeline
 	kindMindmap
+	kindGantt
 )
 
 // detectKind inspects the first non-empty, non-comment line and maps its
@@ -53,6 +54,8 @@ func detectKind(src string) kind {
 			return kindTimeline
 		case "mindmap":
 			return kindMindmap
+		case "gantt":
+			return kindGantt
 		default:
 			return kindUnknown
 		}

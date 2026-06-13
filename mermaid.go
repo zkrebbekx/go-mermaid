@@ -25,6 +25,7 @@ import (
 
 	"github.com/Zac300/go-mermaid/internal/class"
 	"github.com/Zac300/go-mermaid/internal/er"
+	"github.com/Zac300/go-mermaid/internal/gantt"
 	gitgraph "github.com/Zac300/go-mermaid/internal/git"
 	"github.com/Zac300/go-mermaid/internal/journey"
 	"github.com/Zac300/go-mermaid/internal/layout"
@@ -118,6 +119,11 @@ func Render(src string, opts ...Option) (out []byte, err error) {
 		err = wrapParse(err)
 	case kindMindmap:
 		raw, err = mindmap.Render(body, mindmap.RenderOptions{
+			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
+		})
+		err = wrapParse(err)
+	case kindGantt:
+		raw, err = gantt.Render(body, gantt.RenderOptions{
 			Theme: string(cfg.theme), FontFace: cfg.fontFace, FontSize: cfg.fontSize, Padding: cfg.padding, Title: title,
 		})
 		err = wrapParse(err)

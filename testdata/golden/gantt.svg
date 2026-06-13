@@ -1,0 +1,15 @@
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="762" height="189.6" viewBox="0 0 762 189.6" font-family="sans-serif" font-size="14">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="381" y="30" fill="#333333" text-anchor="middle" font-weight="bold">A Gantt Diagram</text>
+  <text x="186" y="63.6" fill="#333333">2024-01-01</text>
+  <text x="746" y="63.6" fill="#333333" text-anchor="end">2024-01-26</text>
+  <line x1="186" y1="69.6" x2="746" y2="69.6" stroke="#9370DB"/>
+  <text x="16" y="87.5" fill="#333333">Research</text>
+  <rect x="186" y="72.6" width="224" height="20" rx="3" fill="#5B8FF9" stroke="#9370DB"/>
+  <text x="16" y="113.5" fill="#333333">Mockups</text>
+  <rect x="410" y="98.6" width="156.8" height="20" rx="3" fill="#5B8FF9" stroke="#9370DB"/>
+  <text x="16" y="139.5" fill="#333333">Backend</text>
+  <rect x="432.4" y="124.6" width="313.6" height="20" rx="3" fill="#61DDAA" stroke="#9370DB"/>
+  <text x="16" y="165.5" fill="#333333">Frontend</text>
+  <rect x="410" y="150.6" width="268.8" height="20" rx="3" fill="#61DDAA" stroke="#9370DB"/>
+</svg>
