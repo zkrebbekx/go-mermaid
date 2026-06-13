@@ -26,9 +26,9 @@ func TestParse(t *testing.T) {
 			})
 
 			Convey("Then bounds span all tasks", func() {
-				min, max := d.Bounds()
-				So(min.Format("2006-01-02"), ShouldEqual, "2024-01-01")
-				So(max.After(min), ShouldBeTrue)
+				lo, hi := d.Bounds()
+				So(lo.Format("2006-01-02"), ShouldEqual, "2024-01-01")
+				So(hi.After(lo), ShouldBeTrue)
 			})
 		})
 	})

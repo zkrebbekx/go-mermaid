@@ -135,25 +135,25 @@ func (d *Diagram) resolve() error {
 }
 
 // Bounds returns the earliest start and latest end across tasks.
-func (d *Diagram) Bounds() (min, max time.Time) {
+func (d *Diagram) Bounds() (lo, hi time.Time) {
 	first := true
 	for _, t := range d.Tasks {
 		if t.Start.IsZero() {
 			continue
 		}
 		if first {
-			min, max = t.Start, t.End()
+			lo, hi = t.Start, t.End()
 			first = false
 			continue
 		}
-		if t.Start.Before(min) {
-			min = t.Start
+		if t.Start.Before(lo) {
+			lo = t.Start
 		}
-		if t.End().After(max) {
-			max = t.End()
+		if t.End().After(hi) {
+			hi = t.End()
 		}
 	}
-	return min, max
+	return lo, hi
 }
 
 func isDuration(f string) bool {
