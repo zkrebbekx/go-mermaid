@@ -38,6 +38,7 @@ type Message struct {
 	Text  string
 	Arrow Arrow
 
+	Num int     // autonumber sequence (0 = unnumbered)
 	Row int     // ordinal row in the diagram (messages and notes share rows)
 	Y   float64 // vertical position of the message line; set during layout
 }

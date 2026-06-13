@@ -109,6 +109,11 @@ func writeMessage(b *strings.Builder, m *Message, lay *Layout, pal theme.Palette
 		marker = ` marker-end="url(#seq-arrow)"`
 	}
 
+	label := m.Text
+	if m.Num > 0 {
+		label = fmt.Sprintf("%d. %s", m.Num, m.Text)
+	}
+
 	if m.From == m.To {
 		// Self-message: a small loop to the right of the lifeline.
 		x := from.X
@@ -120,7 +125,7 @@ func writeMessage(b *strings.Builder, m *Message, lay *Layout, pal theme.Palette
 			svgutil.Num(x), svgutil.Num(y+12))
 		fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s"%s%s/>`, path, pal.Edge, dash, marker)
 		b.WriteByte('\n')
-		writeMsgText(b, m.Text, x+selfLoopW+6, y+6, pal, "start")
+		writeMsgText(b, label, x+selfLoopW+6, y+6, pal, "start")
 		return
 	}
 
@@ -131,7 +136,7 @@ func writeMessage(b *strings.Builder, m *Message, lay *Layout, pal theme.Palette
 	if m.Arrow.Head == HeadCross {
 		writeCross(b, to.X, m.Y, from.X < to.X, pal)
 	}
-	writeMsgText(b, m.Text, (from.X+to.X)/2, m.Y-4, pal, "middle")
+	writeMsgText(b, label, (from.X+to.X)/2, m.Y-4, pal, "middle")
 }
 
 func writeMsgText(b *strings.Builder, text string, x, y float64, pal theme.Palette, anchor string) {

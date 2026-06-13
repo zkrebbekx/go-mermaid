@@ -52,6 +52,27 @@ func TestFrames(t *testing.T) {
 		})
 	})
 
+	Convey("Given autonumber", t, func() {
+		Convey("When parsing", func() {
+			d, err := Parse("sequenceDiagram\nautonumber\nA->>B: x\nB->>A: y")
+
+			Convey("Then messages are numbered in order", func() {
+				So(err, ShouldBeNil)
+				So(d.Messages[0].Num, ShouldEqual, 1)
+				So(d.Messages[1].Num, ShouldEqual, 2)
+			})
+		})
+
+		Convey("When rendering", func() {
+			out, _ := Render("sequenceDiagram\nautonumber\nA->>B: hello",
+				RenderOptions{Theme: "default", FontSize: 14, Padding: 16})
+
+			Convey("Then the number prefixes the label", func() {
+				So(string(out), ShouldContainSubstring, ">1. hello<")
+			})
+		})
+	})
+
 	Convey("Given a loop, when rendering", t, func() {
 		Convey("Then a frame box and label tab appear", func() {
 			out, err := Render("sequenceDiagram\nA->>B: x\nloop retry\nB->>A: y\nend",

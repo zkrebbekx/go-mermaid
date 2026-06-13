@@ -30,13 +30,15 @@ var frameKeywords = map[string]bool{
 
 // blockKeywords are recognized but not drawn (skipped) keywords.
 var blockKeywords = map[string]bool{
-	"autonumber": true, "box": true,
+	"box": true,
 }
 
 type parser struct {
-	d      *Diagram
-	act    map[string][]int // activation start-row stack per participant
-	frames []*Frame         // open frame stack
+	d       *Diagram
+	act     map[string][]int // activation start-row stack per participant
+	frames  []*Frame         // open frame stack
+	autonum bool             // autonumber active
+	msgNum  int              // running autonumber counter
 }
 
 // Parse builds a Diagram from sequence diagram source.
@@ -69,6 +71,8 @@ func Parse(src string) (*Diagram, error) {
 			if err := p.parseNote(line, lineNo); err != nil {
 				return nil, err
 			}
+		case kw == "autonumber":
+			p.autonum = true
 		case kw == "activate":
 			p.activate(strings.TrimSpace(line[len("activate"):]), p.d.rows)
 		case kw == "deactivate":
@@ -155,7 +159,12 @@ func (p *parser) parseMessage(line string, lineNo int) error {
 	p.ensureParticipant(to, to)
 
 	row := p.nextRow()
-	p.d.Messages = append(p.d.Messages, &Message{From: from, To: to, Text: text, Arrow: arrow, Row: row})
+	num := 0
+	if p.autonum {
+		p.msgNum++
+		num = p.msgNum
+	}
+	p.d.Messages = append(p.d.Messages, &Message{From: from, To: to, Text: text, Arrow: arrow, Row: row, Num: num})
 	if activateTarget {
 		p.activate(to, row)
 	}
