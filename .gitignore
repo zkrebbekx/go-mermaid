@@ -17,6 +17,9 @@ coverage.html
 go.work
 go.work.sum
 
+# Fuzzing corpus (generated)
+testdata/fuzz/
+
 # Editor / OS
 .idea/
 .vscode/

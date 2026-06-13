@@ -45,7 +45,15 @@ type ParseError = syntax.Error
 // Errors are wrapped so callers can match the failing stage with
 // errors.Is (ErrParse, ErrLayout, ErrRender, ErrUnsupported) and, for
 // parse failures, recover source position with errors.As(&ParseError{}).
-func Render(src string, opts ...Option) ([]byte, error) {
+func Render(src string, opts ...Option) (out []byte, err error) {
+	// Safety net: diagram source is untrusted, so a bug in any parser or
+	// renderer must surface as an error, never a panic in the caller.
+	defer func() {
+		if r := recover(); r != nil {
+			out, err = nil, fmt.Errorf("%w: internal panic: %v", ErrRender, r)
+		}
+	}()
+
 	cfg := defaultConfig()
 	for _, opt := range opts {
 		opt(&cfg)
