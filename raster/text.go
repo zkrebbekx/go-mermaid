@@ -24,6 +24,7 @@ var (
 	textRe     = regexp.MustCompile(`(?s)<text\b([^>]*)>(.*?)</text>`)
 	tspanRe    = regexp.MustCompile(`(?s)<tspan\b([^>]*)>(.*?)</tspan>`)
 	attrRe     = regexp.MustCompile(`([\w-]+)="([^"]*)"`)
+	groupRe    = regexp.MustCompile(`<g transform="translate\(([0-9.-]+),([0-9.-]+)\)">`)
 	regularFnt *opentype.Font
 	boldFnt    *opentype.Font
 )
@@ -34,10 +35,22 @@ func init() {
 }
 
 // drawText overlays the SVG's text elements onto img at the given scale.
+// Text inside the content group inherits that group's translate; text before
+// it (e.g. the title) does not.
 func drawText(img *image.RGBA, svg string, scale, rootSize float64) {
-	for _, m := range textRe.FindAllStringSubmatch(svg, -1) {
-		attrs := parseAttrs(m[1])
-		inner := m[2]
+	gx, gy, gIdx := 0.0, 0.0, -1
+	if loc := groupRe.FindStringSubmatchIndex(svg); loc != nil {
+		gx = numAttr(svg[loc[2]:loc[3]], "0")
+		gy = numAttr(svg[loc[4]:loc[5]], "0")
+		gIdx = loc[0]
+	}
+	for _, loc := range textRe.FindAllStringSubmatchIndex(svg, -1) {
+		ox, oy := 0.0, 0.0
+		if gIdx >= 0 && loc[0] > gIdx {
+			ox, oy = gx, gy
+		}
+		attrs := parseAttrs(svg[loc[2]:loc[3]])
+		inner := svg[loc[4]:loc[5]]
 		fill := colorOf(attrs["fill"])
 		size := sizeOf(attrs["font-size"], rootSize)
 		bold := attrs["font-weight"] == "bold"
@@ -48,13 +61,13 @@ func drawText(img *image.RGBA, svg string, scale, rootSize float64) {
 				ta := parseAttrs(ts[1])
 				x := numAttr(ta["x"], attrs["x"])
 				y := numAttr(ta["y"], attrs["y"])
-				drawString(img, xhtml.UnescapeString(ts[2]), x, y, size, scale, fill, bold, anchor)
+				drawString(img, xhtml.UnescapeString(ts[2]), x+ox, y+oy, size, scale, fill, bold, anchor)
 			}
 			continue
 		}
 		x := numAttr(attrs["x"], "0")
 		y := numAttr(attrs["y"], "0")
-		drawString(img, xhtml.UnescapeString(inner), x, y, size, scale, fill, bold, anchor)
+		drawString(img, xhtml.UnescapeString(inner), x+ox, y+oy, size, scale, fill, bold, anchor)
 	}
 }
 
