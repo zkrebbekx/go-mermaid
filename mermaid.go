@@ -7,6 +7,9 @@
 // gantt, C4 (C4Context/C4Container), requirementDiagram, sankey-beta, and
 // xychart-beta. Unsupported types return ErrUnsupported; see DiagramTypes.
 //
+// Render returns SVG. For PNG, use the github.com/Zac300/go-mermaid/raster
+// subpackage, which keeps the rasterizer dependency out of the core library.
+//
 // Basic use:
 //
 //	svg, err := mermaid.Render("graph TD\n  A --> B")

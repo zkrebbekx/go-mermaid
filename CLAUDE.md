@@ -8,6 +8,8 @@ Guidance for AI assistants and contributors working in this repository.
 no Node, no JavaScript runtime. Supports 20 diagram types (flowchart,
 sequence, class, state, ER, pie, journey, quadrant, gitGraph, timeline,
 mindmap, gantt, C4, requirement, sankey, xychart, block, kanban, packet, radar).
+Output is SVG; the `raster` subpackage rasterizes SVG to PNG (the only
+dependency-carrying package — the core stays dependency-free).
 
 ## Architecture
 
@@ -30,7 +32,8 @@ source → lexer → parser → domain.Graph → layout → render → SVG
 | `internal/svgutil`  | Shared SVG helpers (number formatting, XML escaping).      |
 | `internal/syntax`   | Shared positional error type.                              |
 | `.` (root)          | Public API: `Render`, diagram-type dispatch, options, errors. |
-| `cmd/mermaid`       | CLI wrapper over the library.                              |
+| `raster`            | Optional SVG→PNG rasterizer (oksvg/rasterx); not imported by core. |
+| `cmd/mermaid`       | CLI wrapper (SVG/PNG, batch, serve).                       |
 
 Diagram-type packages (each self-contained: parse → layout/place → render,
 wired into the root `detectKind` dispatch): `internal/sequence`, `class`,

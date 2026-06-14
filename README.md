@@ -76,7 +76,7 @@ echo "graph LR; A-->B-->C" | mermaid -theme dark -o out.svg
 mermaid a.mmd b.mmd c.mmd      # batch: writes a.svg, b.svg, c.svg
 mermaid -list-types            # list supported diagram types
 mermaid -list-themes           # list themes
-mermaid serve -addr :8080      # HTTP render endpoint (POST source, or GET ?src=)
+mermaid serve -addr :8080      # HTTP endpoint (POST source / GET ?src=, ?format=png)
 mermaid -png -scale 2 -o d.png d.mmd   # PNG output (rasterized)
 ```
 
@@ -90,6 +90,9 @@ import "github.com/Zac300/go-mermaid/raster"
 
 img, err := raster.PNG("graph TD\n A --> B", 2) // 2 = scale factor
 ```
+
+PNG is also available from the CLI (`-png -scale N`) and the HTTP server
+(`?format=png&scale=N`). Output formats: **SVG** (core) and **PNG** (raster).
 
 ## Error handling
 

@@ -32,9 +32,14 @@ render`:
 - `internal/theme`, `internal/svgutil` — palettes and SVG helpers shared by all renderers.
 
 Every other diagram type (sequence, class, state, er, pie, journey, quadrant,
-git, timeline, mindmap, gantt, c4, requirement, sankey) is a self-contained
-`internal/<type>` package that parses, lays out, and renders its own SVG, wired
-into the root dispatch. Several reuse `internal/layout` for node positioning.
+git, timeline, mindmap, gantt, c4, requirement, sankey, xychart, block, kanban,
+packet, radar) is a self-contained `internal/<type>` package that parses, lays
+out, and renders its own SVG, wired into the root dispatch. Several reuse
+`internal/layout` for node positioning.
+
+The core library emits SVG and has no third-party dependencies. PNG output
+lives in the separate `raster` package (it depends on oksvg/rasterx); the core
+never imports it, so SVG-only consumers stay dependency-free.
 
 Keep stages decoupled: a change to rendering shouldn't require touching the
 parser, and vice versa.

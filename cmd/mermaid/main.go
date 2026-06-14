@@ -6,11 +6,13 @@
 //
 // With no input file (or "-"), source is read from stdin and SVG is written
 // to stdout (or -o). With multiple input files, each FILE.mmd is rendered to
-// FILE.svg and -o is not allowed.
+// FILE.svg and -o is not allowed. Pass -png (or an .png -o path) for PNG.
 //
 //	mermaid diagram.mmd > diagram.svg
 //	echo "graph TD; A-->B" | mermaid -theme dark -o out.svg
 //	mermaid a.mmd b.mmd c.mmd      # writes a.svg, b.svg, c.svg
+//	mermaid -png -scale 2 -o d.png d.mmd
+//	mermaid serve -addr :8080      # GET/POST; ?format=png&scale=N for PNG
 package main
 
 import (
@@ -20,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	mermaid "github.com/Zac300/go-mermaid"
@@ -135,8 +138,8 @@ func renderBatch(files []string, opts []mermaid.Option, asPNG bool, scale float6
 	return nil
 }
 
-// renderHandler renders the request body (POST) or ?src= (GET) to SVG.
-// The optional ?theme= query selects a theme.
+// renderHandler renders the request body (POST) or ?src= (GET) to SVG, or to
+// PNG when ?format=png. Optional queries: ?theme=, ?scale= (PNG).
 func renderHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var src string
@@ -154,6 +157,22 @@ func renderHandler() http.HandlerFunc {
 		if t := r.URL.Query().Get("theme"); t != "" {
 			opts = append(opts, mermaid.WithTheme(mermaid.Theme(t)))
 		}
+
+		if r.URL.Query().Get("format") == "png" {
+			scale := 1.0
+			if s, err := strconv.ParseFloat(r.URL.Query().Get("scale"), 64); err == nil && s > 0 {
+				scale = s
+			}
+			data, err := raster.PNG(src, scale, opts...)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "image/png")
+			_, _ = w.Write(data)
+			return
+		}
+
 		svg, err := mermaid.Render(src, opts...)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
