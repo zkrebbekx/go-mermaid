@@ -74,10 +74,12 @@ homebrew_casks:
     repository:
       owner: zkrebbekx
       name: homebrew-tap
-      token: '{{ envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}'
+      token: '{{ index .Env "HOMEBREW_TAP_GITHUB_TOKEN" }}'
     # Auto-skips when the tap token isn't configured, so the first release
     # succeeds before the tap repo/secret exist; set the secret to enable.
-    skip_upload: '{{ if envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}false{{ else }}true{{ end }}'
+    # `index .Env` returns "" for a missing key (unlike .Env.X, which errors);
+    # there is no envOrDefault template function in GoReleaser.
+    skip_upload: '{{ if index .Env "HOMEBREW_TAP_GITHUB_TOKEN" }}false{{ else }}true{{ end }}'
     commit_author:
       name: goreleaser-bot
       email: goreleaser@users.noreply.github.com
