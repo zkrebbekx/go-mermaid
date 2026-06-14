@@ -186,18 +186,36 @@ Rendering is fast — roughly 10–50µs per diagram with no external processes.
 
 ## Roadmap
 
-- [x] Crossing minimization (median heuristic, dummy nodes for long edges)
-- [x] Barycenter x-positioning (parents centered over children)
-- [x] Multi-rank edge bends and self-loops
-- [x] Sequence diagrams
-- [x] Orthogonal + curved edge routing, subgraphs, styling, 12 node shapes
-- [x] Sequence notes, activations, loop/alt/opt frames, autonumber
+### Done
+
 - [x] 20 diagram types (see table above)
-- [x] Front-matter titles, accessibility (title/desc), 5 themes, clickable nodes
-- [x] CLI batch render, `serve` HTTP mode, fuzz-tested parsers
+- [x] Sugiyama flowchart layout: crossing minimization, dummy-node bends,
+      barycenter positioning, orthogonal + curved edges
+- [x] Flowchart: 12 shapes, subgraphs, `classDef`/`style`/`:::`, clickable nodes
+- [x] Sequence: notes, activations, loop/alt/opt frames, autonumber
+- [x] Front-matter titles, accessibility (`role`/title/desc/accTitle), 5 themes,
+      configurable/transparent background
+- [x] SVG + PNG output (PNG via the `raster` subpackage)
+- [x] CLI (stdin/file/batch, `serve` HTTP, `-list-*`), `Render`/`RenderTo` API
+- [x] goconvey BDD tests, golden SVGs, fuzz-tested parsers, ~92% coverage
+
+### Before the first tagged release (v0.1.0)
+
+- [ ] README examples gallery (sample SVG/PNG per diagram type)
+- [ ] Font-metric-aware label sizing (proportional fonts can overflow boxes)
+- [ ] Custom theme registration (user-supplied palette)
+- [ ] API review pass (lock the option set we want to keep stable)
+- [ ] CONTRIBUTING/issue-template polish and a CHANGELOG seeded by release-please
+
+### Later
+
 - [ ] Network-simplex ranking (tighter flowchart layouts)
 - [ ] Spline edge routing
-- [x] PNG output (raster subpackage)
+- [ ] Richer fidelity: class generics/annotations, sequence create/destroy/
+      highlight, ER attribute keys
+- [ ] More diagram types (architecture-beta, treemap, zenuml)
+- [ ] Distribution: Homebrew tap, Docker image for the CLI/server
+- [ ] Toward v1.0: freeze the public API
 
 ## Architecture
 
