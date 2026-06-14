@@ -154,4 +154,4 @@ land without API churn.
 
 Label sizing uses `svgutil.TextWidth` (Helvetica advance widths, dependency-
 free) so wide glyphs reserve room correctly; non-ASCII falls back to a 0.6em
-estimate. See the README roadmap for the remaining pre-release list.
+estimate. See the README roadmap for what's planned next.

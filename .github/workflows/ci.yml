@@ -67,4 +67,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
-          args: release --snapshot --clean
+          # Skip the multi-arch image build here (needs buildx/QEMU); the real
+          # release job builds and pushes it. Config is still fully validated.
+          args: release --snapshot --clean --skip=docker
