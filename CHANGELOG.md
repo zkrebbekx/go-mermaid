@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.1...v0.1.2) (2026-06-14)
+
+
+### Bug Fixes
+
+* use a valid template function for the homebrew cask token ([#15](https://github.com/zkrebbekx/go-mermaid/issues/15)) ([9697414](https://github.com/zkrebbekx/go-mermaid/commit/96974143a349320029c7d70ef379199e8fc1bcb0))
+
 ## [0.1.1](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.0...v0.1.1) (2026-06-14)
 
 
