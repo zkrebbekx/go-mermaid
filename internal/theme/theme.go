@@ -3,6 +3,8 @@
 // truth for colors.
 package theme
 
+import "sync"
+
 // Palette holds the colors used to render a diagram.
 type Palette struct {
 	Background string
@@ -56,8 +58,27 @@ func Names() []string {
 	return []string{"default", "dark", "neutral", "forest", "base"}
 }
 
-// For returns the palette for name, or the default palette if name is unknown.
+var (
+	mu     sync.RWMutex
+	custom = map[string]Palette{}
+)
+
+// Register adds or replaces a custom palette under name.
+func Register(name string, p Palette) {
+	mu.Lock()
+	custom[name] = p
+	mu.Unlock()
+}
+
+// For returns the palette for name: a registered custom palette, then a
+// built-in, otherwise the default palette.
 func For(name string) Palette {
+	mu.RLock()
+	p, ok := custom[name]
+	mu.RUnlock()
+	if ok {
+		return p
+	}
 	if p, ok := palettes[name]; ok {
 		return p
 	}

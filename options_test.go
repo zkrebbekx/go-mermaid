@@ -65,6 +65,19 @@ func TestOptions(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(string(out), ShouldContainSubstring, "#eeeeee")
 		})
+
+		Convey("When using a custom theme", func() {
+			out, err := mermaid.Render(src, mermaid.WithCustomTheme("brand", mermaid.Palette{
+				Background: "#102030", NodeFill: "#204060", NodeStroke: "#88aaff",
+				Text: "#ffffff", Edge: "#aaccff",
+			}))
+
+			Convey("Then the custom palette colors are used", func() {
+				So(err, ShouldBeNil)
+				So(string(out), ShouldContainSubstring, "#204060")
+				So(string(out), ShouldContainSubstring, "#102030")
+			})
+		})
 	})
 }
 

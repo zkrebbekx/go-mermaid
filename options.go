@@ -25,6 +25,18 @@ const (
 // Themes returns the names of all built-in themes.
 func Themes() []string { return theme.Names() }
 
+// Palette is a custom color set for WithCustomTheme.
+type Palette = theme.Palette
+
+// WithCustomTheme registers a palette under name and selects it for this
+// render. Subsequent renders can also reference the name via WithTheme.
+func WithCustomTheme(name string, p Palette) Option {
+	return func(c *config) {
+		theme.Register(name, p)
+		c.theme = Theme(name)
+	}
+}
+
 // DiagramTypes returns the diagram header keywords this library can render.
 func DiagramTypes() []string {
 	return []string{
