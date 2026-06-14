@@ -43,9 +43,49 @@ func Compute(g *domain.Graph, opts Options) (*Result, error) {
 	// right way on edges that were reversed to break cycles.
 	restoreReversed(g, reversed)
 	routeEdges(lg, g, totalPrimary)
+	separateParallel(g)
 
 	w, h := bounds(g)
 	return &Result{Graph: g, Width: w, Height: h}, nil
+}
+
+// separateParallel offsets edges that share the same node pair perpendicular
+// to their direction, so overlapping lines (e.g. A->B and B->A) and their
+// labels don't sit on top of each other.
+func separateParallel(g *domain.Graph) {
+	key := func(a, b string) string {
+		if a < b {
+			return a + "\x00" + b
+		}
+		return b + "\x00" + a
+	}
+	groups := map[string][]*domain.Edge{}
+	for _, e := range g.Edges {
+		if e.From != e.To {
+			groups[key(e.From, e.To)] = append(groups[key(e.From, e.To)], e)
+		}
+	}
+	for _, es := range groups {
+		if len(es) < 2 {
+			continue
+		}
+		for i, e := range es {
+			if len(e.Points) < 2 {
+				continue
+			}
+			p0, pn := e.Points[0], e.Points[len(e.Points)-1]
+			d := math.Hypot(pn.X-p0.X, pn.Y-p0.Y)
+			if d == 0 {
+				continue
+			}
+			px, py := -(pn.Y-p0.Y)/d, (pn.X-p0.X)/d
+			off := (float64(i) - float64(len(es)-1)/2) * 34
+			for j := range e.Points {
+				e.Points[j].X += px * off
+				e.Points[j].Y += py * off
+			}
+		}
+	}
 }
 
 // sizeNodes estimates a box size for each node from its label and font size.

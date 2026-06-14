@@ -3,10 +3,10 @@
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
     <path d="M34.56,18 L34.56,103" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <path d="M34.56,133 L34.56,218" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <text x="34.56" y="175.5" fill="#333333" text-anchor="middle" dy="-2">start</text>
-    <path d="M34.56,133 L34.56,218" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <text x="34.56" y="175.5" fill="#333333" text-anchor="middle" dy="-2">stop</text>
+    <path d="M51.56,133 L51.56,218" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <text x="51.56" y="175.5" fill="#333333" text-anchor="middle" dy="-2">start</text>
+    <path d="M17.56,133 L17.56,218" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <text x="17.56" y="175.5" fill="#333333" text-anchor="middle" dy="-2">stop</text>
     <path d="M34.56,248 L34.56,333" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
     <path d="M34.56,363 L34.56,448" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
     <circle cx="34.56" cy="9" r="7" fill="#333333"/>
