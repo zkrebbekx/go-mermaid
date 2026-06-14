@@ -1,10 +1,10 @@
 <svg role="img" xmlns="http://www.w3.org/2000/svg" width="256.3" height="250" viewBox="0 0 256.3 250" font-family="sans-serif" font-size="14">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
-    <path d="M115.72,84 L115.72,119 L47.15,119 L47.15,174" fill="none" stroke="#333333"/>
-    <path d="M115.72,84 L109.72,96 L121.72,96 Z" fill="#ffffff" stroke="#333333"/>
-    <path d="M115.72,84 L115.72,119 L184.3,119 L184.3,184" fill="none" stroke="#333333"/>
-    <path d="M115.72,84 L109.72,90 L115.72,96 L121.72,90 Z" fill="#333333" stroke="#333333"/>
+    <path d="M93.79,84 L93.79,119 L47.15,119 L47.15,174" fill="none" stroke="#333333"/>
+    <path d="M93.79,84 L87.79,96 L99.79,96 Z" fill="#ffffff" stroke="#333333"/>
+    <path d="M137.66,84 L137.66,119 L184.3,119 L184.3,184" fill="none" stroke="#333333"/>
+    <path d="M137.66,84 L131.66,90 L137.66,96 L143.66,90 Z" fill="#333333" stroke="#333333"/>
     <rect x="49.91" y="0" width="131.62" height="84" fill="#ECECFF" stroke="#9370DB"/>
     <text x="115.72" y="14" fill="#333333" text-anchor="middle" font-weight="bold">Animal</text>
     <line x1="49.91" y1="24" x2="181.53" y2="24" stroke="#9370DB"/>

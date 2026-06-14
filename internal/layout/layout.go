@@ -7,6 +7,7 @@ package layout
 
 import (
 	"math"
+	"sort"
 
 	"github.com/Zac300/go-mermaid/internal/domain"
 	"github.com/Zac300/go-mermaid/internal/svgutil"
@@ -44,6 +45,7 @@ func Compute(g *domain.Graph, opts Options) (*Result, error) {
 	restoreReversed(g, reversed)
 	routeEdges(lg, g, totalPrimary)
 	separateParallel(g)
+	spreadPorts(g, g.Direction == domain.TopBottom || g.Direction == domain.BottomTop)
 
 	w, h := bounds(g)
 	return &Result{Graph: g, Width: w, Height: h}, nil
@@ -83,6 +85,96 @@ func separateParallel(g *domain.Graph) {
 			for j := range e.Points {
 				e.Points[j].X += px * off
 				e.Points[j].Y += py * off
+			}
+		}
+	}
+}
+
+// spreadPorts fans out the attach points of edges that meet a node on the same
+// face, so multiple edges (and their arrowheads) don't pile up at the box
+// center. Endpoints are distributed evenly along the face and ordered by their
+// far end to avoid introducing crossings; the adjacent elbow shifts with each
+// endpoint so the connecting segment stays orthogonal.
+func spreadPorts(g *domain.Graph, vertical bool) {
+	type touch struct {
+		e   *domain.Edge
+		idx int // index of the endpoint touching this node
+	}
+	// Edges that share a node pair are already fanned out by separateParallel;
+	// leaving them out here keeps that wider spacing intact.
+	pairKey := func(a, b string) string {
+		if a < b {
+			return a + "\x00" + b
+		}
+		return b + "\x00" + a
+	}
+	pairCount := map[string]int{}
+	for _, e := range g.Edges {
+		if e.From != e.To {
+			pairCount[pairKey(e.From, e.To)]++
+		}
+	}
+	byNode := map[string][]touch{}
+	for _, e := range g.Edges {
+		if e.From == e.To || len(e.Points) < 2 || pairCount[pairKey(e.From, e.To)] > 1 {
+			continue
+		}
+		byNode[e.From] = append(byNode[e.From], touch{e, 0})
+		byNode[e.To] = append(byNode[e.To], touch{e, len(e.Points) - 1})
+	}
+	for id, ts := range byNode {
+		n := g.NodeByID(id)
+		if n == nil {
+			continue
+		}
+		c := n.Center()
+		faces := map[bool][]touch{}
+		for _, t := range ts {
+			p := t.e.Points[t.idx]
+			pos := p.Y >= c.Y
+			if !vertical {
+				pos = p.X >= c.X
+			}
+			faces[pos] = append(faces[pos], t)
+		}
+		for _, grp := range faces {
+			if len(grp) < 2 {
+				continue
+			}
+			far := func(t touch) domain.Point {
+				if t.idx == 0 {
+					return t.e.Points[len(t.e.Points)-1]
+				}
+				return t.e.Points[0]
+			}
+			sort.SliceStable(grp, func(i, j int) bool {
+				if vertical {
+					return far(grp[i]).X < far(grp[j]).X
+				}
+				return far(grp[i]).Y < far(grp[j]).Y
+			})
+			for k, t := range grp {
+				frac := float64(k+1) / float64(len(grp)+1)
+				var port, cur float64
+				if vertical {
+					port = n.Pos.X + n.Size.W*frac
+					cur = t.e.Points[t.idx].X
+				} else {
+					port = n.Pos.Y + n.Size.H*frac
+					cur = t.e.Points[t.idx].Y
+				}
+				delta := port - cur
+				adj := t.idx + 1
+				if t.idx != 0 {
+					adj = t.idx - 1
+				}
+				if vertical {
+					t.e.Points[t.idx].X += delta
+					t.e.Points[adj].X += delta
+				} else {
+					t.e.Points[t.idx].Y += delta
+					t.e.Points[adj].Y += delta
+				}
 			}
 		}
 	}

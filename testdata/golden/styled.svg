@@ -3,12 +3,12 @@
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
     <path d="M69.57,67 L119.57,67" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <path d="M199.24,67 L222.69,67 L222.69,21 L249.24,21" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <rect x="206.46" y="30" width="35.57" height="18" fill="#ffffff"/>
-    <text x="224.24" y="44" fill="#333333" text-anchor="middle" dy="-2">pass</text>
-    <path d="M199.24,67 L222.69,67 L222.69,113 L249.25,113" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <rect x="212.3" y="76" width="23.89" height="18" fill="#ffffff"/>
-    <text x="224.25" y="90" fill="#333333" text-anchor="middle" dy="-2">fail</text>
+    <path d="M199.24,60 L222.69,60 L222.69,21 L249.24,21" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="206.46" y="26.5" width="35.57" height="18" fill="#ffffff"/>
+    <text x="224.24" y="40.5" fill="#333333" text-anchor="middle" dy="-2">pass</text>
+    <path d="M199.24,74 L222.69,74 L222.69,113 L249.25,113" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="212.3" y="79.5" width="23.89" height="18" fill="#ffffff"/>
+    <text x="224.25" y="93.5" fill="#333333" text-anchor="middle" dy="-2">fail</text>
     <rect x="0" y="46" width="69.57" height="42" fill="#dfd" stroke="#393"/>
     <text fill="#063" text-anchor="middle"><tspan x="34.78" y="71.9">Start</tspan></text>
     <polygon points="159.41,46 199.24,67 159.41,88 119.57,67" fill="#ffd" stroke="#aa0"/>
