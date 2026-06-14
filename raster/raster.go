@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"regexp"
+	"strconv"
 
 	mermaid "github.com/Zac300/go-mermaid"
 	"github.com/srwiley/oksvg"
@@ -47,9 +49,24 @@ func RasterizeSVG(svg []byte, scale float64) ([]byte, error) {
 	raster := rasterx.NewDasher(w, h, scanner)
 	icon.Draw(raster, 1.0)
 
+	// oksvg ignores <text>; draw labels ourselves.
+	drawText(img, string(svg), scale, rootFontSize(svg))
+
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
 		return nil, fmt.Errorf("rasterize: encode png: %w", err)
 	}
 	return buf.Bytes(), nil
+}
+
+var rootSizeRe = regexp.MustCompile(`<svg\b[^>]*\bfont-size="([0-9.]+)"`)
+
+// rootFontSize reads the root <svg> font-size, defaulting to 14.
+func rootFontSize(svg []byte) float64 {
+	if m := rootSizeRe.FindSubmatch(svg); m != nil {
+		if v, err := strconv.ParseFloat(string(m[1]), 64); err == nil && v > 0 {
+			return v
+		}
+	}
+	return 14
 }
