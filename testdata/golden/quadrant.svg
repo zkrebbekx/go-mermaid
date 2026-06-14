@@ -13,14 +13,14 @@
   <text x="282" y="249.6" fill="#333333" text-anchor="middle">May be improved</text>
   <text x="42" y="411.6" fill="#333333" text-anchor="start">Low Reach</text>
   <text x="362" y="411.6" fill="#333333" text-anchor="end">High Reach</text>
-  <text x="36" y="393.6" fill="#333333" text-anchor="end">Low Engagement</text>
-  <text x="36" y="87.6" fill="#333333" text-anchor="end">High Engagement</text>
+  <text x="28" y="153.6" fill="#333333" text-anchor="middle" transform="rotate(-90 28 153.6)">High Engagement</text>
+  <text x="28" y="313.6" fill="#333333" text-anchor="middle" transform="rotate(-90 28 313.6)">Low Engagement</text>
   <circle cx="138" cy="201.6" r="6" fill="#ECECFF" stroke="#9370DB"/>
-  <text x="147" y="206.5" fill="#333333">Campaign A</text>
+  <text x="147" y="206.5" fill="#333333" text-anchor="start">Campaign A</text>
   <circle cx="186" cy="320" r="6" fill="#ECECFF" stroke="#9370DB"/>
-  <text x="195" y="324.9" fill="#333333">Campaign B</text>
+  <text x="195" y="324.9" fill="#333333" text-anchor="start">Campaign B</text>
   <circle cx="224.4" cy="172.8" r="6" fill="#ECECFF" stroke="#9370DB"/>
-  <text x="233.4" y="177.7" fill="#333333">Campaign C</text>
+  <text x="233.4" y="177.7" fill="#333333" text-anchor="start">Campaign C</text>
   <circle cx="291.6" cy="284.8" r="6" fill="#ECECFF" stroke="#9370DB"/>
-  <text x="300.6" y="289.7" fill="#333333">Campaign D</text>
+  <text x="300.6" y="289.7" fill="#333333" text-anchor="start">Campaign D</text>
 </svg>

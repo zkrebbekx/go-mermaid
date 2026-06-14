@@ -107,9 +107,19 @@ func svg(d *Diagram, o RenderOptions) []byte {
 	by := svgutil.Num(top + plotSize + o.FontSize + 4)
 	axisText(d.XLeft, svgutil.Num(left), by, "start")
 	axisText(d.XRight, svgutil.Num(left+plotSize), by, "end")
-	ly := svgutil.Num(top + plotSize)
-	axisText(d.YBottom, svgutil.Num(left-6), ly, "end")
-	axisText(d.YTop, svgutil.Num(left-6), svgutil.Num(top+o.FontSize), "end")
+	// Y-axis labels run vertically along the left edge so long text fits in the
+	// narrow gutter instead of spilling off the canvas.
+	yAxisText := func(text string, cy float64) {
+		if text == "" {
+			return
+		}
+		lx := left - o.FontSize
+		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s" text-anchor="middle" transform="rotate(-90 %s %s)">%s</text>`,
+			svgutil.Num(lx), svgutil.Num(cy), pal.Text, svgutil.Num(lx), svgutil.Num(cy), svgutil.Esc(text))
+		b.WriteByte('\n')
+	}
+	yAxisText(d.YTop, top+plotSize/4)
+	yAxisText(d.YBottom, top+plotSize*3/4)
 
 	// Points: X right, Y up.
 	for _, p := range d.Points {
@@ -118,8 +128,14 @@ func svg(d *Diagram, o RenderOptions) []byte {
 		fmt.Fprintf(&b, `  <circle cx="%s" cy="%s" r="6" fill="%s" stroke="%s"/>`,
 			svgutil.Num(cx), svgutil.Num(cy), pal.NodeFill, pal.NodeStroke)
 		b.WriteByte('\n')
-		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s">%s</text>`,
-			svgutil.Num(cx+9), svgutil.Num(cy+o.FontSize*0.35), pal.Text, svgutil.Esc(p.Label))
+		// Place the label to the right of the dot, but flip it left when it would
+		// run past the right margin.
+		lx, anchor := cx+9, "start"
+		if cx+9+svgutil.TextWidth(p.Label, o.FontSize) > w-pad {
+			lx, anchor = cx-9, "end"
+		}
+		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s" text-anchor="%s">%s</text>`,
+			svgutil.Num(lx), svgutil.Num(cy+o.FontSize*0.35), pal.Text, anchor, svgutil.Esc(p.Label))
 		b.WriteByte('\n')
 	}
 
