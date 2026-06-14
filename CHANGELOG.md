@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.2...v0.1.3) (2026-06-14)
+
+
+### Bug Fixes
+
+* use exact env-var form for homebrew cask token ([#17](https://github.com/zkrebbekx/go-mermaid/issues/17)) ([506fc32](https://github.com/zkrebbekx/go-mermaid/commit/506fc3299c53d3f36b1482eb3c01677fd629d8c7))
+
 ## [0.1.2](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.1...v0.1.2) (2026-06-14)
 
 
