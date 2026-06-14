@@ -26,21 +26,46 @@ archives:
 checksum:
   name_template: checksums.txt
 
-dockers_v2:
-  - id: mermaid
-    images:
-      - ghcr.io/zkrebbekx/go-mermaid
-    tags:
-      - "{{ .Version }}"
-      - latest
+# Legacy dockers/docker_manifests: deprecated in favour of dockers_v2, but
+# dockers_v2 ships an empty build context (the binary is never staged), so the
+# Dockerfile COPY fails. These reliably copy the per-arch binary into context.
+dockers:
+  - id: amd64
+    goos: linux
+    goarch: amd64
     dockerfile: Dockerfile
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    labels:
-      org.opencontainers.image.source: https://github.com/zkrebbekx/go-mermaid
-      org.opencontainers.image.version: "{{ .Version }}"
-      org.opencontainers.image.licenses: MIT
+    use: buildx
+    image_templates:
+      - "ghcr.io/zkrebbekx/go-mermaid:{{ .Version }}-amd64"
+      - "ghcr.io/zkrebbekx/go-mermaid:latest-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.source=https://github.com/zkrebbekx/go-mermaid"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+  - id: arm64
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile
+    use: buildx
+    image_templates:
+      - "ghcr.io/zkrebbekx/go-mermaid:{{ .Version }}-arm64"
+      - "ghcr.io/zkrebbekx/go-mermaid:latest-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.source=https://github.com/zkrebbekx/go-mermaid"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+
+docker_manifests:
+  - name_template: "ghcr.io/zkrebbekx/go-mermaid:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/zkrebbekx/go-mermaid:{{ .Version }}-amd64"
+      - "ghcr.io/zkrebbekx/go-mermaid:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/zkrebbekx/go-mermaid:latest"
+    image_templates:
+      - "ghcr.io/zkrebbekx/go-mermaid:latest-amd64"
+      - "ghcr.io/zkrebbekx/go-mermaid:latest-arm64"
 
 homebrew_casks:
   - name: mermaid
