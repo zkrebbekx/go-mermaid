@@ -26,6 +26,37 @@ archives:
 checksum:
   name_template: checksums.txt
 
+dockers_v2:
+  - id: mermaid
+    images:
+      - ghcr.io/zkrebbekx/go-mermaid
+    tags:
+      - "{{ .Version }}"
+      - latest
+    dockerfile: Dockerfile
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.source: https://github.com/zkrebbekx/go-mermaid
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.licenses: MIT
+
+homebrew_casks:
+  - name: mermaid
+    description: Pure-Go Mermaid diagram renderer (SVG/PNG), no browser or Node
+    homepage: https://github.com/zkrebbekx/go-mermaid
+    repository:
+      owner: zkrebbekx
+      name: homebrew-tap
+      token: '{{ envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}'
+    # Auto-skips when the tap token isn't configured, so the first release
+    # succeeds before the tap repo/secret exist; set the secret to enable.
+    skip_upload: '{{ if envOrDefault "HOMEBREW_TAP_GITHUB_TOKEN" "" }}false{{ else }}true{{ end }}'
+    commit_author:
+      name: goreleaser-bot
+      email: goreleaser@users.noreply.github.com
+
 release:
   # release-please already created the GitHub Release and tag; attach
   # the built archives and checksums to it rather than creating a new one.

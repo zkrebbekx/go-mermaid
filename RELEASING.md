@@ -25,11 +25,38 @@ Go modules have no registry to publish to — a release *is* a git tag.
 3. **Merge the release PR** when you want to cut a version. release-please then
    creates the git tag and a GitHub Release.
 4. The same workflow runs **GoReleaser**, which cross-compiles the `mermaid`
-   CLI (linux/darwin/windows × amd64/arm64) and attaches archives + checksums
-   to that release (`release.mode: append`).
+   CLI (linux/darwin/windows × amd64/arm64), attaches archives + checksums to
+   the release (`release.mode: append`), pushes a multi-arch Docker image to
+   `ghcr.io/zkrebbekx/go-mermaid`, and (when configured) updates the Homebrew
+   cask.
 
 No manual tagging needed. Configuration:
 `release-please-config.json`, `.release-please-manifest.json`, `.goreleaser.yaml`.
+
+## Distribution artifacts
+
+| Artifact | Where | Setup needed |
+| --- | --- | --- |
+| Archives + checksums | GitHub Release assets | none (uses `GITHUB_TOKEN`) |
+| Docker image | `ghcr.io/zkrebbekx/go-mermaid:{version, latest}` | none — `packages: write` + ghcr login are wired in the workflow |
+| Homebrew cask | `zkrebbekx/homebrew-tap` | one-time, see below |
+
+### Enabling the Homebrew cask
+
+The cask step **auto-skips** until a tap token is present, so it never blocks a
+release. To turn it on, once:
+
+1. Create a public repo named **`homebrew-tap`** under your account
+   (`gh repo create zkrebbekx/homebrew-tap --public`).
+2. Create a PAT with `contents: write` (classic: `repo`) scope on that tap repo.
+3. Add it as a secret on this repo:
+   ```bash
+   gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo zkrebbekx/go-mermaid
+   ```
+
+The next release publishes `Casks/mermaid.rb`, installable with
+`brew install zkrebbekx/tap/mermaid`. (The cask ships an unsigned binary; if
+Gatekeeper quarantines it, `xattr -dr com.apple.quarantine $(which mermaid)`.)
 
 > Note: the release PR is created with the default `GITHUB_TOKEN`, so its CI
 > may not auto-run (GitHub suppresses workflow events for token-created PRs).

@@ -51,6 +51,21 @@ CLI:
 go install github.com/zkrebbekx/go-mermaid/cmd/mermaid@latest
 ```
 
+Homebrew:
+
+```bash
+brew install zkrebbekx/tap/mermaid
+```
+
+Docker:
+
+```bash
+echo "graph LR; A-->B" | docker run -i --rm ghcr.io/zkrebbekx/go-mermaid > out.svg
+```
+
+Prebuilt binaries for Linux/macOS/Windows (amd64/arm64) are attached to each
+[GitHub release](https://github.com/zkrebbekx/go-mermaid/releases).
+
 ## Usage
 
 ### Library
@@ -214,14 +229,10 @@ Rendering is fast — roughly 10–50µs per diagram with no external processes.
 - [x] SVG + PNG output (PNG via the `raster` subpackage)
 - [x] CLI (stdin/file/batch, `serve` HTTP, `-list-*`), `Render`/`RenderTo` API
 - [x] goconvey BDD tests, golden SVGs, fuzz-tested parsers, ~92% coverage
-
-### Before the first tagged release (v0.1.0)
-
 - [x] README examples gallery (sample PNG per diagram type)
 - [x] Font-metric-aware label sizing (Helvetica advance widths)
 - [x] Custom theme registration (`WithCustomTheme`)
-- [ ] API review pass (lock the option set we want to keep stable)
-- [ ] CONTRIBUTING/issue-template polish and a CHANGELOG seeded by release-please
+- [x] Distribution: prebuilt binaries, Homebrew cask, ghcr.io Docker image
 
 ### Later
 
@@ -230,7 +241,6 @@ Rendering is fast — roughly 10–50µs per diagram with no external processes.
 - [ ] Richer fidelity: class generics/annotations, sequence create/destroy/
       highlight, ER attribute keys
 - [ ] More diagram types (architecture-beta, treemap, zenuml)
-- [ ] Distribution: Homebrew tap, Docker image for the CLI/server
 - [ ] Toward v1.0: freeze the public API
 
 ## Architecture
