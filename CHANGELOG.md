@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.0...v0.1.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* build docker image via legacy dockers config ([#13](https://github.com/zkrebbekx/go-mermaid/issues/13)) ([f76643e](https://github.com/zkrebbekx/go-mermaid/commit/f76643e2d0c0045c1fd0589cd0b06ee2c452a275))
+
 ## 0.1.0 (2026-06-14)
 
 
