@@ -2,12 +2,18 @@
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
     <path d="M60.4,64 L60.4,129" fill="none" stroke="#333333"/>
-    <text x="60.4" y="78" fill="#333333" text-anchor="middle">1</text>
-    <text x="60.4" y="115" fill="#333333" text-anchor="middle">0..N</text>
+    <line x1="65.4" y1="71" x2="55.4" y2="71" stroke="#333333"/>
+    <line x1="60.4" y1="117" x2="54.4" y2="129" stroke="#333333"/>
+    <line x1="60.4" y1="117" x2="66.4" y2="129" stroke="#333333"/>
+    <line x1="60.4" y1="117" x2="60.4" y2="129" stroke="#333333"/>
+    <circle cx="60.4" cy="111" r="4" fill="#ffffff" stroke="#333333"/>
     <text x="60.4" y="129" fill="#333333" text-anchor="middle" dy="-2">places</text>
     <path d="M60.4,193 L60.4,258" fill="none" stroke="#333333"/>
-    <text x="60.4" y="207" fill="#333333" text-anchor="middle">1</text>
-    <text x="60.4" y="244" fill="#333333" text-anchor="middle">1..N</text>
+    <line x1="65.4" y1="200" x2="55.4" y2="200" stroke="#333333"/>
+    <line x1="60.4" y1="246" x2="54.4" y2="258" stroke="#333333"/>
+    <line x1="60.4" y1="246" x2="66.4" y2="258" stroke="#333333"/>
+    <line x1="60.4" y1="246" x2="60.4" y2="258" stroke="#333333"/>
+    <line x1="55.4" y1="244" x2="65.4" y2="244" stroke="#333333"/>
     <text x="60.4" y="258" fill="#333333" text-anchor="middle" dy="-2">contains</text>
     <rect x="0" y="0" width="120.8" height="64" fill="#ECECFF" stroke="#9370DB"/>
     <text x="60.4" y="14" fill="#333333" text-anchor="middle" font-weight="bold">CUSTOMER</text>

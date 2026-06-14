@@ -128,9 +128,9 @@ func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal 
 	fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s"%s/>`, strings.TrimSpace(d.String()), pal.Edge, dash)
 	b.WriteByte('\n')
 
-	writeCard(b, r.LeftCard, e.Points[0], e.Points[1], pal)
 	last := len(e.Points) - 1
-	writeCard(b, r.RightCard, e.Points[last], e.Points[last-1], pal)
+	writeCrow(b, r.LeftKind, e.Points[0], e.Points[1], pal)
+	writeCrow(b, r.RightKind, e.Points[last], e.Points[last-1], pal)
 
 	if r.Label != "" {
 		mid := e.Points[len(e.Points)/2]
@@ -140,23 +140,54 @@ func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal 
 	}
 }
 
-// writeCard places a cardinality label a short way along the line from end
-// toward next.
-func writeCard(b *strings.Builder, card string, end, next domain.Point, pal theme.Palette) {
-	if card == "" {
+// writeCrow draws a crow's-foot cardinality marker at tip, where the line
+// continues toward next. The marker faces into the entity at tip.
+func writeCrow(b *strings.Builder, kind Card, tip, next domain.Point, pal theme.Palette) {
+	dx, dy := tip.X-next.X, tip.Y-next.Y
+	d := math.Hypot(dx, dy)
+	if d == 0 {
 		return
 	}
-	const off = 14.0
-	dx, dy := next.X-end.X, next.Y-end.Y
-	d := dx*dx + dy*dy
-	x, y := end.X, end.Y
-	if d > 0 {
-		l := off / math.Sqrt(d)
-		x, y = end.X+dx*l, end.Y+dy*l
+	dx, dy = dx/d, dy/d // unit vector pointing into the entity
+	px, py := -dy, dx   // perpendicular
+
+	line := func(x1, y1, x2, y2 float64) {
+		fmt.Fprintf(b, `    <line x1="%s" y1="%s" x2="%s" y2="%s" stroke="%s"/>`,
+			svgutil.Num(x1), svgutil.Num(y1), svgutil.Num(x2), svgutil.Num(y2), pal.Edge)
+		b.WriteByte('\n')
 	}
-	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle">%s</text>`,
-		svgutil.Num(x), svgutil.Num(y), pal.Text, svgutil.Esc(card))
-	b.WriteByte('\n')
+	bar := func(dist, half float64) {
+		bx, by := tip.X-dx*dist, tip.Y-dy*dist
+		line(bx+px*half, by+py*half, bx-px*half, by-py*half)
+	}
+	circle := func(dist, r float64) {
+		fmt.Fprintf(b, `    <circle cx="%s" cy="%s" r="%s" fill="%s" stroke="%s"/>`,
+			svgutil.Num(tip.X-dx*dist), svgutil.Num(tip.Y-dy*dist), svgutil.Num(r), pal.Background, pal.Edge)
+		b.WriteByte('\n')
+	}
+	foot := func() {
+		const depth, spread = 12.0, 6.0
+		bx, by := tip.X-dx*depth, tip.Y-dy*depth
+		line(bx, by, tip.X+px*spread, tip.Y+py*spread)
+		line(bx, by, tip.X-px*spread, tip.Y-py*spread)
+		line(bx, by, tip.X, tip.Y)
+	}
+
+	switch kind {
+	case CardOne:
+		bar(7, 5)
+	case CardZeroOne:
+		bar(8, 5)
+		circle(15, 4)
+	case CardMany:
+		foot()
+	case CardOneMany:
+		foot()
+		bar(14, 5)
+	case CardZeroMany:
+		foot()
+		circle(18, 4)
+	}
 }
 
 func entitySize(e *Entity, fontSize float64) domain.Size {

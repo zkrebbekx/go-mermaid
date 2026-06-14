@@ -78,13 +78,13 @@ func TestRender(t *testing.T) {
 				RenderOptions{Theme: "default", FontFace: "sans-serif", FontSize: 14, Padding: 16})
 			svg := string(out)
 
-			Convey("Then it draws entity boxes, attributes, and cardinality", func() {
+			Convey("Then it draws entity boxes, attributes, and crow's-foot markers", func() {
 				So(err, ShouldBeNil)
 				So(svg, ShouldStartWith, "<svg")
 				So(svg, ShouldContainSubstring, ">CUSTOMER<")
 				So(svg, ShouldContainSubstring, ">ORDER<")
 				So(svg, ShouldContainSubstring, "int id")
-				So(svg, ShouldContainSubstring, ">0..N<")
+				So(svg, ShouldContainSubstring, "<circle") // zero-or-many crow's foot
 			})
 		})
 	})

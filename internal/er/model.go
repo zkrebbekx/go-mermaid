@@ -9,6 +9,22 @@ type Entity struct {
 	Attributes []string
 }
 
+// Card is a crow's-foot cardinality kind.
+type Card int
+
+const (
+	// CardOne is exactly one (||).
+	CardOne Card = iota
+	// CardZeroOne is zero or one (|o / o|).
+	CardZeroOne
+	// CardMany is many ({ / }).
+	CardMany
+	// CardOneMany is one or more (}| / |{).
+	CardOneMany
+	// CardZeroMany is zero or more (}o / o{).
+	CardZeroMany
+)
+
 // Relationship connects two entities with cardinality at each end.
 type Relationship struct {
 	From      string
@@ -16,6 +32,8 @@ type Relationship struct {
 	Label     string
 	LeftCard  string // human-readable cardinality at the From end
 	RightCard string // ... at the To end
+	LeftKind  Card   // crow's-foot kind at the From end
+	RightKind Card   // ... at the To end
 	Dashed    bool   // non-identifying relationship
 }
 

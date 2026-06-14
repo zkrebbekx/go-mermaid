@@ -99,9 +99,27 @@ func (d *Diagram) parseRelation(line string, lineNo int) error {
 		From: from, To: to, Label: label,
 		LeftCard:  cardLabel(leftCard),
 		RightCard: cardLabel(rightCard),
+		LeftKind:  cardKind(leftCard),
+		RightKind: cardKind(rightCard),
 		Dashed:    lineSep == "..",
 	})
 	return nil
+}
+
+// cardKind decodes a crow's-foot token into a cardinality kind.
+func cardKind(tok string) Card {
+	many := strings.ContainsAny(tok, "{}")
+	zero := strings.Contains(tok, "o")
+	switch {
+	case many && zero:
+		return CardZeroMany
+	case many:
+		return CardOneMany
+	case zero:
+		return CardZeroOne
+	default:
+		return CardOne
+	}
 }
 
 // cardLabel maps a crow's-foot cardinality token to a readable label.
