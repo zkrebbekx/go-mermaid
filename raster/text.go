@@ -9,6 +9,7 @@ import (
 
 	xhtml "html"
 
+	"github.com/Zac300/go-mermaid/internal/svgutil"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goregular"
@@ -68,14 +69,28 @@ func drawString(img *image.RGBA, s string, x, y, size, scale float64, fill color
 	if fnt == nil {
 		return
 	}
-	face, err := opentype.NewFace(fnt, &opentype.FaceOptions{Size: size * scale, DPI: 72})
+	px := size * scale
+	face, err := opentype.NewFace(fnt, &opentype.FaceOptions{Size: px, DPI: 72})
 	if err != nil {
 		return
+	}
+	adv := float64(font.MeasureString(face, s)) / 64
+
+	// The layout reserved space using svgutil.TextWidth (sans-serif metrics).
+	// The Go font is wider, so shrink to fit the reserved width and keep PNG
+	// labels inside their boxes.
+	if reserved := svgutil.TextWidth(s, size) * scale; reserved > 0 && adv > reserved {
+		_ = face.Close()
+		px *= reserved / adv
+		face, err = opentype.NewFace(fnt, &opentype.FaceOptions{Size: px, DPI: 72})
+		if err != nil {
+			return
+		}
+		adv = float64(font.MeasureString(face, s)) / 64
 	}
 	defer func() { _ = face.Close() }()
 
 	d := &font.Drawer{Dst: img, Src: image.NewUniform(fill), Face: face}
-	adv := float64(d.MeasureString(s)) / 64
 	dx := x * scale
 	switch anchor {
 	case "middle":
