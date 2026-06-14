@@ -8,7 +8,7 @@ The project is pre-1.0. Security fixes are applied to the latest release and
 ## Reporting a vulnerability
 
 Please report security issues privately via GitHub's
-[private vulnerability reporting](https://github.com/Zac300/go-mermaid/security/advisories/new)
+[private vulnerability reporting](https://github.com/zkrebbekx/go-mermaid/security/advisories/new)
 rather than opening a public issue.
 
 You can expect an acknowledgement within a few days. Since this library parses

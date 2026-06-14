@@ -5,7 +5,7 @@ Thanks for your interest in improving `go-mermaid`.
 ## Getting started
 
 ```bash
-git clone https://github.com/Zac300/go-mermaid
+git clone https://github.com/zkrebbekx/go-mermaid
 cd go-mermaid
 make test
 ```

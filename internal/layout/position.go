@@ -1,6 +1,6 @@
 package layout
 
-import "github.com/Zac300/go-mermaid/internal/domain"
+import "github.com/zkrebbekx/go-mermaid/internal/domain"
 
 // positionLG assigns coordinates in rank space: pc is the center along the
 // rank (primary) axis, cross is the coordinate along the order (cross) axis.

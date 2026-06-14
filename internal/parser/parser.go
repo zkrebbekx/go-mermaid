@@ -6,9 +6,9 @@ package parser
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
-	"github.com/Zac300/go-mermaid/internal/lexer"
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/lexer"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Parse builds a Graph from tokens produced by the lexer.

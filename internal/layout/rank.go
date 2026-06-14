@@ -1,6 +1,6 @@
 package layout
 
-import "github.com/Zac300/go-mermaid/internal/domain"
+import "github.com/zkrebbekx/go-mermaid/internal/domain"
 
 // assignRanks computes a layer index per node using longest-path ranking:
 // each node's rank is one greater than the maximum rank of its predecessors.

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
-	"github.com/Zac300/go-mermaid/internal/lexer"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/lexer"
 )
 
 func parse(src string) (*domain.Graph, error) {

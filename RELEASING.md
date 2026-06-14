@@ -10,7 +10,7 @@ and [GoReleaser](https://goreleaser.com).
 | --- | --- | --- |
 | Pre-1.0 (now) | `v0.x.y` | No API stability promise. `feat:` → minor, `fix:` → patch. Breaking changes allowed in minors. |
 | Stable | `v1.0.0`+ | Public API frozen. Breaking changes require a major bump. |
-| Post-v1 breaking | `v2.0.0`+ | **Go requirement:** the module path must gain a `/v2` suffix (`github.com/Zac300/go-mermaid/v2`) and imports must update. |
+| Post-v1 breaking | `v2.0.0`+ | **Go requirement:** the module path must gain a `/v2` suffix (`github.com/zkrebbekx/go-mermaid/v2`) and imports must update. |
 
 Go modules have no registry to publish to — a release *is* a git tag.
 `pkg.go.dev` and the module proxy index a version the first time it is fetched.
@@ -71,7 +71,7 @@ To enable it with a **Claude Pro/Max subscription** (no separate API key):
 2. Add it as a repository secret named `CLAUDE_CODE_OAUTH_TOKEN`
    (Settings → Secrets and variables → Actions), or:
    ```bash
-   gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo Zac300/go-mermaid
+   gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo zkrebbekx/go-mermaid
    ```
 3. (For `@claude` mentions in issues/PRs) install the Claude GitHub App:
    <https://github.com/apps/claude>, or run `/install-github-app` from Claude

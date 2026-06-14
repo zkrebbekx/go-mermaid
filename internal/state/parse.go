@@ -3,7 +3,7 @@ package state
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Parse builds a Diagram from state diagram source.

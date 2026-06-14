@@ -5,9 +5,9 @@ import (
 	"image/png"
 	"testing"
 
-	mermaid "github.com/Zac300/go-mermaid"
-	"github.com/Zac300/go-mermaid/raster"
 	. "github.com/smartystreets/goconvey/convey"
+	mermaid "github.com/zkrebbekx/go-mermaid"
+	"github.com/zkrebbekx/go-mermaid/raster"
 )
 
 func TestPNG(t *testing.T) {

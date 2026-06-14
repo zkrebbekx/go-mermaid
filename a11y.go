@@ -3,7 +3,7 @@ package mermaid
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
 )
 
 // extractA11y pulls single-line accTitle:/accDescr: directives out of the body

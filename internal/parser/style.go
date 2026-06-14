@@ -3,7 +3,7 @@ package parser
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
 )
 
 // classAssign records a pending "apply class name to these node ids".

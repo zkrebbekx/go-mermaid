@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	mermaid "github.com/Zac300/go-mermaid"
 	. "github.com/smartystreets/goconvey/convey"
+	mermaid "github.com/zkrebbekx/go-mermaid"
 )
 
 // update regenerates golden files: go test -run TestGolden -update

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/svgutil"
-	"github.com/Zac300/go-mermaid/internal/theme"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/theme"
 )
 
 // RenderOptions controls gitGraph appearance.

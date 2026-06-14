@@ -13,7 +13,7 @@ package c4
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Element is a C4 element (Person, System, Container, Component, …).

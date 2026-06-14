@@ -3,10 +3,10 @@ package layout
 import (
 	"testing"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
-	"github.com/Zac300/go-mermaid/internal/lexer"
-	"github.com/Zac300/go-mermaid/internal/parser"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/lexer"
+	"github.com/zkrebbekx/go-mermaid/internal/parser"
 )
 
 func graphFrom(src string) *domain.Graph {

@@ -13,9 +13,9 @@ import (
 	"regexp"
 	"strconv"
 
-	mermaid "github.com/Zac300/go-mermaid"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
+	mermaid "github.com/zkrebbekx/go-mermaid"
 )
 
 // PNG renders Mermaid source to SVG and rasterizes it to a PNG image. The

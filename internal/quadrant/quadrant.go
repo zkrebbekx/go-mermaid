@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Point is a plotted item with coordinates in the unit square.

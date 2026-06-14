@@ -1,9 +1,9 @@
 package mermaid
 
 import (
-	"github.com/Zac300/go-mermaid/internal/layout"
-	"github.com/Zac300/go-mermaid/internal/render"
-	"github.com/Zac300/go-mermaid/internal/theme"
+	"github.com/zkrebbekx/go-mermaid/internal/layout"
+	"github.com/zkrebbekx/go-mermaid/internal/render"
+	"github.com/zkrebbekx/go-mermaid/internal/theme"
 )
 
 // Theme selects a built-in color palette for rendering.

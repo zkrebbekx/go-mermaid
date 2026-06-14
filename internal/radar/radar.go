@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Curve is a named series of values, one per axis.

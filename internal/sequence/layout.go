@@ -1,6 +1,6 @@
 package sequence
 
-import "github.com/Zac300/go-mermaid/internal/svgutil"
+import "github.com/zkrebbekx/go-mermaid/internal/svgutil"
 
 // Options tunes sequence diagram spacing and metrics.
 type Options struct {

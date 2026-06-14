@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
 )
 
 func TestDirections(t *testing.T) {

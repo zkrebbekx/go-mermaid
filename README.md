@@ -1,9 +1,9 @@
 # go-mermaid
 
-[![CI](https://github.com/Zac300/go-mermaid/actions/workflows/ci.yml/badge.svg)](https://github.com/Zac300/go-mermaid/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Zac300/go-mermaid/branch/main/graph/badge.svg)](https://codecov.io/gh/Zac300/go-mermaid)
-[![Go Reference](https://pkg.go.dev/badge/github.com/Zac300/go-mermaid.svg)](https://pkg.go.dev/github.com/Zac300/go-mermaid)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Zac300/go-mermaid)](https://goreportcard.com/report/github.com/Zac300/go-mermaid)
+[![CI](https://github.com/zkrebbekx/go-mermaid/actions/workflows/ci.yml/badge.svg)](https://github.com/zkrebbekx/go-mermaid/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/zkrebbekx/go-mermaid/branch/main/graph/badge.svg)](https://codecov.io/gh/zkrebbekx/go-mermaid)
+[![Go Reference](https://pkg.go.dev/badge/github.com/zkrebbekx/go-mermaid.svg)](https://pkg.go.dev/github.com/zkrebbekx/go-mermaid)
+[![Go Report Card](https://goreportcard.com/badge/github.com/zkrebbekx/go-mermaid)](https://goreportcard.com/report/github.com/zkrebbekx/go-mermaid)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Render [Mermaid](https://mermaid.js.org) diagrams to SVG in **pure Go** — no
@@ -42,13 +42,13 @@ or CLI with zero external dependencies.
 Library:
 
 ```bash
-go get github.com/Zac300/go-mermaid
+go get github.com/zkrebbekx/go-mermaid
 ```
 
 CLI:
 
 ```bash
-go install github.com/Zac300/go-mermaid/cmd/mermaid@latest
+go install github.com/zkrebbekx/go-mermaid/cmd/mermaid@latest
 ```
 
 ## Usage
@@ -61,7 +61,7 @@ package main
 import (
 	"os"
 
-	mermaid "github.com/Zac300/go-mermaid"
+	mermaid "github.com/zkrebbekx/go-mermaid"
 )
 
 func main() {
@@ -102,7 +102,7 @@ The core library is dependency-free and emits SVG. PNG rasterization lives in
 a separate package so only PNG users pull the rasterizer dependency:
 
 ```go
-import "github.com/Zac300/go-mermaid/raster"
+import "github.com/zkrebbekx/go-mermaid/raster"
 
 img, err := raster.PNG("graph TD\n A --> B", 2) // 2 = scale factor
 ```

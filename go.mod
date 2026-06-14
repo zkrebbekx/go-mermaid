@@ -1,4 +1,4 @@
-module github.com/Zac300/go-mermaid
+module github.com/zkrebbekx/go-mermaid
 
 go 1.24
 

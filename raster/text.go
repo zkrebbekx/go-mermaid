@@ -10,7 +10,7 @@ import (
 
 	xhtml "html"
 
-	"github.com/Zac300/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
 	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"

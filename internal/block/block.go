@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Block is one cell in the grid.

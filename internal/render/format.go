@@ -1,6 +1,6 @@
 package render
 
-import "github.com/Zac300/go-mermaid/internal/svgutil"
+import "github.com/zkrebbekx/go-mermaid/internal/svgutil"
 
 // num and esc delegate to the shared svgutil helpers so all renderers format
 // numbers and escape text identically.

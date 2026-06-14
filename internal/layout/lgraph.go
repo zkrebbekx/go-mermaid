@@ -3,7 +3,7 @@ package layout
 import (
 	"sort"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
 )
 
 // lnode is a layout node: either a real graph node or a dummy inserted to

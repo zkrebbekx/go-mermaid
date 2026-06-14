@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
 )
 
 // applyBackground post-processes the full-canvas background rect that every

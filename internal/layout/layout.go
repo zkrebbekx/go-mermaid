@@ -9,8 +9,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
-	"github.com/Zac300/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
 )
 
 // Options tunes spacing and text metrics used during layout.

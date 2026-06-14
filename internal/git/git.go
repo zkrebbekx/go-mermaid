@@ -13,7 +13,7 @@ package git
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Commit is a point on a branch lane. Order is its global x position.

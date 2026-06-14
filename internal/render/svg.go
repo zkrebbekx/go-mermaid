@@ -7,10 +7,10 @@ import (
 	"math"
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/domain"
-	"github.com/Zac300/go-mermaid/internal/layout"
-	"github.com/Zac300/go-mermaid/internal/svgutil"
-	"github.com/Zac300/go-mermaid/internal/theme"
+	"github.com/zkrebbekx/go-mermaid/internal/domain"
+	"github.com/zkrebbekx/go-mermaid/internal/layout"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
+	"github.com/zkrebbekx/go-mermaid/internal/theme"
 )
 
 // Options controls SVG appearance.

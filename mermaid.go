@@ -7,7 +7,7 @@
 // gantt, C4 (C4Context/C4Container), requirementDiagram, sankey-beta, and
 // xychart-beta. Unsupported types return ErrUnsupported; see DiagramTypes.
 //
-// Render returns SVG. For PNG, use the github.com/Zac300/go-mermaid/raster
+// Render returns SVG. For PNG, use the github.com/zkrebbekx/go-mermaid/raster
 // subpackage, which keeps the rasterizer dependency out of the core library.
 //
 // Basic use:
@@ -30,30 +30,30 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Zac300/go-mermaid/internal/block"
-	"github.com/Zac300/go-mermaid/internal/c4"
-	"github.com/Zac300/go-mermaid/internal/class"
-	"github.com/Zac300/go-mermaid/internal/er"
-	"github.com/Zac300/go-mermaid/internal/gantt"
-	gitgraph "github.com/Zac300/go-mermaid/internal/git"
-	"github.com/Zac300/go-mermaid/internal/journey"
-	"github.com/Zac300/go-mermaid/internal/kanban"
-	"github.com/Zac300/go-mermaid/internal/layout"
-	"github.com/Zac300/go-mermaid/internal/lexer"
-	"github.com/Zac300/go-mermaid/internal/mindmap"
-	"github.com/Zac300/go-mermaid/internal/packet"
-	"github.com/Zac300/go-mermaid/internal/parser"
-	"github.com/Zac300/go-mermaid/internal/pie"
-	"github.com/Zac300/go-mermaid/internal/quadrant"
-	"github.com/Zac300/go-mermaid/internal/radar"
-	"github.com/Zac300/go-mermaid/internal/render"
-	"github.com/Zac300/go-mermaid/internal/requirement"
-	"github.com/Zac300/go-mermaid/internal/sankey"
-	"github.com/Zac300/go-mermaid/internal/sequence"
-	"github.com/Zac300/go-mermaid/internal/state"
-	"github.com/Zac300/go-mermaid/internal/syntax"
-	"github.com/Zac300/go-mermaid/internal/timeline"
-	"github.com/Zac300/go-mermaid/internal/xychart"
+	"github.com/zkrebbekx/go-mermaid/internal/block"
+	"github.com/zkrebbekx/go-mermaid/internal/c4"
+	"github.com/zkrebbekx/go-mermaid/internal/class"
+	"github.com/zkrebbekx/go-mermaid/internal/er"
+	"github.com/zkrebbekx/go-mermaid/internal/gantt"
+	gitgraph "github.com/zkrebbekx/go-mermaid/internal/git"
+	"github.com/zkrebbekx/go-mermaid/internal/journey"
+	"github.com/zkrebbekx/go-mermaid/internal/kanban"
+	"github.com/zkrebbekx/go-mermaid/internal/layout"
+	"github.com/zkrebbekx/go-mermaid/internal/lexer"
+	"github.com/zkrebbekx/go-mermaid/internal/mindmap"
+	"github.com/zkrebbekx/go-mermaid/internal/packet"
+	"github.com/zkrebbekx/go-mermaid/internal/parser"
+	"github.com/zkrebbekx/go-mermaid/internal/pie"
+	"github.com/zkrebbekx/go-mermaid/internal/quadrant"
+	"github.com/zkrebbekx/go-mermaid/internal/radar"
+	"github.com/zkrebbekx/go-mermaid/internal/render"
+	"github.com/zkrebbekx/go-mermaid/internal/requirement"
+	"github.com/zkrebbekx/go-mermaid/internal/sankey"
+	"github.com/zkrebbekx/go-mermaid/internal/sequence"
+	"github.com/zkrebbekx/go-mermaid/internal/state"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/timeline"
+	"github.com/zkrebbekx/go-mermaid/internal/xychart"
 )
 
 // ParseError reports a lexing or parsing failure with its source position

@@ -12,7 +12,7 @@ package timeline
 import (
 	"strings"
 
-	"github.com/Zac300/go-mermaid/internal/syntax"
+	"github.com/zkrebbekx/go-mermaid/internal/syntax"
 )
 
 // Period is a point in time with one or more events.

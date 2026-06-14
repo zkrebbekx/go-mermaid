@@ -1,6 +1,6 @@
 package layout
 
-import "github.com/Zac300/go-mermaid/internal/domain"
+import "github.com/zkrebbekx/go-mermaid/internal/domain"
 
 // makeAcyclic removes cycles by reversing back edges found during a DFS.
 // It returns the edges that were reversed so they can be restored after

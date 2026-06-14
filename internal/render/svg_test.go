@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Zac300/go-mermaid/internal/layout"
-	"github.com/Zac300/go-mermaid/internal/lexer"
-	"github.com/Zac300/go-mermaid/internal/parser"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/zkrebbekx/go-mermaid/internal/layout"
+	"github.com/zkrebbekx/go-mermaid/internal/lexer"
+	"github.com/zkrebbekx/go-mermaid/internal/parser"
 )
 
 func laidOut(src string) *layout.Result {
