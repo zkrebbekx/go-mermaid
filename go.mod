@@ -1,12 +1,12 @@
 module github.com/zkrebbekx/go-mermaid
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
-	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
+	golang.org/x/image v0.43.0
 )
 
 require (
@@ -14,5 +14,5 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 )
