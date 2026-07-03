@@ -1,6 +1,6 @@
 module github.com/zkrebbekx/go-mermaid
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/smartystreets/goconvey v1.8.1
@@ -13,6 +13,6 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 )
