@@ -161,3 +161,36 @@ func TestEscPlain(t *testing.T) {
 		})
 	})
 }
+
+func TestParallelEdgeLabelsSVG(t *testing.T) {
+	Convey("Given opposite labeled edges between the same node pair (issue #27)", t, func() {
+		out, err := SVG(laidOut("flowchart TD\nClient -->|request| API\nAPI -->|response| Client"), opts)
+		svg := string(out)
+
+		Convey("Then both labels are emitted", func() {
+			So(err, ShouldBeNil)
+			So(svg, ShouldContainSubstring, ">request<")
+			So(svg, ShouldContainSubstring, ">response<")
+		})
+
+		Convey("Then no label background rect starts at a negative x", func() {
+			So(err, ShouldBeNil)
+			So(svg, ShouldNotContainSubstring, `<rect x="-`)
+		})
+
+		Convey("Then the two label rects sit at different heights", func() {
+			So(err, ShouldBeNil)
+			var ys []string
+			for _, ln := range strings.Split(svg, "\n") {
+				if !strings.Contains(ln, `fill="#ffffff"/>`) || !strings.Contains(ln, `height="18"`) {
+					continue
+				}
+				_, after, found := strings.Cut(ln, `y="`)
+				So(found, ShouldBeTrue)
+				ys = append(ys, after)
+			}
+			So(len(ys), ShouldEqual, 2)
+			So(ys[0], ShouldNotEqual, ys[1])
+		})
+	})
+}

@@ -24,4 +24,9 @@ type Edge struct {
 	// Points is the laid-out polyline from source to target, including
 	// any bend points. Empty until layout runs.
 	Points []Point
+
+	// LabelPos is the anchor for the edge label on the routed path. Layout
+	// sets it to the path midpoint, or to a staggered position when several
+	// edges join the same node pair and their labels would otherwise overlap.
+	LabelPos Point
 }
