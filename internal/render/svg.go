@@ -134,10 +134,9 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved boo
 	b.WriteByte('\n')
 
 	if e.Label != "" {
-		// Midpoint of the polyline's endpoints, not Points[len/2] (which is
-		// the target endpoint for a two-point line).
-		first, last := e.Points[0], e.Points[len(e.Points)-1]
-		midX, midY := (first.X+last.X)/2, (first.Y+last.Y)/2
+		// Layout anchors the label on the routed path and staggers labels
+		// of parallel edges so they never paint over each other.
+		midX, midY := e.LabelPos.X, e.LabelPos.Y
 		tw := svgutil.TextWidth(e.Label, fontSize) + 6
 		fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>`,
 			num(midX-tw/2), num(midY-fontSize), num(tw), num(fontSize+4), pal.Background)

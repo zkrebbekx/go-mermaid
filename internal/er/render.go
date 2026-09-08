@@ -133,7 +133,7 @@ func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal 
 	writeCrow(b, r.RightKind, e.Points[last], e.Points[last-1], pal)
 
 	if r.Label != "" {
-		mid := domain.PolylineMidpoint(e.Points)
+		mid := e.LabelPos
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
 			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(r.Label))
 		b.WriteByte('\n')

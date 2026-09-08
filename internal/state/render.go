@@ -132,7 +132,7 @@ func writeTransition(b *strings.Builder, t *Transition, g *domain.Graph, pal the
 		strings.TrimSpace(d.String()), pal.Edge)
 	b.WriteByte('\n')
 	if t.Label != "" {
-		mid := domain.PolylineMidpoint(e.Points)
+		mid := e.LabelPos
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
 			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(t.Label))
 		b.WriteByte('\n')

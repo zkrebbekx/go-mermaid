@@ -44,49 +44,214 @@ func Compute(g *domain.Graph, opts Options) (*Result, error) {
 	// right way on edges that were reversed to break cycles.
 	restoreReversed(g, reversed)
 	routeEdges(lg, g, totalPrimary)
+	vertical := g.Direction == domain.TopBottom || g.Direction == domain.BottomTop
 	separateParallel(g)
-	spreadPorts(g, g.Direction == domain.TopBottom || g.Direction == domain.BottomTop)
+	spreadPorts(g, vertical)
+	placeLabels(g, vertical, opts)
+	normalizeOrigin(g, opts)
 
-	w, h := bounds(g)
+	w, h := bounds(g, opts)
 	return &Result{Graph: g, Width: w, Height: h}, nil
 }
 
-// separateParallel offsets edges that share the same node pair perpendicular
-// to their direction, so overlapping lines (e.g. A->B and B->A) and their
-// labels don't sit on top of each other.
-func separateParallel(g *domain.Graph) {
+// parallelSep is the perpendicular distance between edges that join the same
+// node pair.
+const parallelSep = 34.0
+
+// parallelGroups returns the edges that share an unordered node pair, grouped
+// in first-seen order. Self-loops and lone edges are left out.
+func parallelGroups(g *domain.Graph) [][]*domain.Edge {
 	key := func(a, b string) string {
 		if a < b {
 			return a + "\x00" + b
 		}
 		return b + "\x00" + a
 	}
-	groups := map[string][]*domain.Edge{}
+	idx := map[string]int{}
+	var groups [][]*domain.Edge
 	for _, e := range g.Edges {
-		if e.From != e.To {
-			groups[key(e.From, e.To)] = append(groups[key(e.From, e.To)], e)
-		}
-	}
-	for _, es := range groups {
-		if len(es) < 2 {
+		if e.From == e.To {
 			continue
 		}
+		k := key(e.From, e.To)
+		i, ok := idx[k]
+		if !ok {
+			i = len(groups)
+			idx[k] = i
+			groups = append(groups, nil)
+		}
+		groups[i] = append(groups[i], e)
+	}
+	var out [][]*domain.Edge
+	for _, es := range groups {
+		if len(es) >= 2 {
+			out = append(out, es)
+		}
+	}
+	return out
+}
+
+// pairAxis returns the unit vector from the lower-ID node of the pair to the
+// higher-ID node, measured between node centers. Every edge in a parallel
+// group is offset against this one axis, so A->B and B->A move apart even
+// though their own polylines run in opposite directions.
+func pairAxis(g *domain.Graph, e *domain.Edge) (ax, ay float64, ok bool) {
+	lo, hi := e.From, e.To
+	if hi < lo {
+		lo, hi = hi, lo
+	}
+	a, b := g.NodeByID(lo), g.NodeByID(hi)
+	if a == nil || b == nil {
+		return 0, 0, false
+	}
+	ca, cb := a.Center(), b.Center()
+	d := math.Hypot(cb.X-ca.X, cb.Y-ca.Y)
+	if d == 0 {
+		return 0, 0, false
+	}
+	return (cb.X - ca.X) / d, (cb.Y - ca.Y) / d, true
+}
+
+// separateParallel offsets edges that share the same node pair perpendicular
+// to the pair axis, so overlapping lines (e.g. A->B and B->A) don't sit on
+// top of each other.
+func separateParallel(g *domain.Graph) {
+	for _, es := range parallelGroups(g) {
+		ax, ay, ok := pairAxis(g, es[0])
+		if !ok {
+			continue
+		}
+		px, py := -ay, ax
 		for i, e := range es {
-			if len(e.Points) < 2 {
-				continue
-			}
-			p0, pn := e.Points[0], e.Points[len(e.Points)-1]
-			d := math.Hypot(pn.X-p0.X, pn.Y-p0.Y)
-			if d == 0 {
-				continue
-			}
-			px, py := -(pn.Y-p0.Y)/d, (pn.X-p0.X)/d
-			off := (float64(i) - float64(len(es)-1)/2) * 34
+			off := (float64(i) - float64(len(es)-1)/2) * parallelSep
 			for j := range e.Points {
 				e.Points[j].X += px * off
 				e.Points[j].Y += py * off
 			}
 		}
+	}
+}
+
+// labelSize estimates the box a renderer draws around an edge label.
+func labelSize(label string, fontSize float64) domain.Size {
+	return domain.Size{W: svgutil.TextWidth(label, fontSize) + 6, H: fontSize + 4}
+}
+
+// labelRect returns the estimated box of e's label around LabelPos. The box
+// matches the background rect the flowchart renderer draws: the text
+// baseline sits near the bottom, so most of the box is above LabelPos.
+func labelRect(e *domain.Edge, fontSize float64) (domain.Rect, bool) {
+	if e.Label == "" || len(e.Points) == 0 {
+		return domain.Rect{}, false
+	}
+	sz := labelSize(e.Label, fontSize)
+	return domain.Rect{
+		Min:  domain.Point{X: e.LabelPos.X - sz.W/2, Y: e.LabelPos.Y - fontSize},
+		Size: sz,
+	}, true
+}
+
+// placeLabels sets LabelPos on every edge. A lone edge anchors its label at
+// the midpoint of its path. Edges that share a node pair run parallelSep
+// apart; when their labels are wider than that gap along the perpendicular
+// axis, the labels are staggered along the path instead so none paints over
+// another.
+func placeLabels(g *domain.Graph, vertical bool, opts Options) {
+	for _, e := range g.Edges {
+		e.LabelPos = domain.PolylineMidpoint(e.Points)
+	}
+	for _, es := range parallelGroups(g) {
+		var labeled []*domain.Edge
+		for _, e := range es {
+			if e.Label != "" && len(e.Points) >= 2 {
+				labeled = append(labeled, e)
+			}
+		}
+		if len(labeled) < 2 || !labelsCollide(labeled, vertical, opts.FontSize) {
+			continue
+		}
+		staggerLabels(labeled, vertical, opts.FontSize)
+	}
+}
+
+// labelsCollide reports whether two adjacent labels in a parallel group would
+// overlap when both sit at the same distance along their edges. Only the
+// label extent across the edges matters: width for vertical edges, height for
+// horizontal ones.
+func labelsCollide(es []*domain.Edge, vertical bool, fontSize float64) bool {
+	const gap = 4.0
+	extent := func(e *domain.Edge) float64 {
+		sz := labelSize(e.Label, fontSize)
+		if vertical {
+			return sz.W
+		}
+		return sz.H
+	}
+	for i := 1; i < len(es); i++ {
+		if (extent(es[i-1])+extent(es[i]))/2+gap > parallelSep {
+			return true
+		}
+	}
+	return false
+}
+
+// staggerLabels spreads the labels of a parallel group along the path. The
+// positions are measured in one shared frame (from the lower-ID node), so
+// opposite-direction edges still get distinct slots. Slots are centered on
+// the path midpoint and at least one label height apart. On vertical edges
+// the anchor is nudged down so the label box, which extends mostly above
+// the anchor, is centered in its slot.
+func staggerLabels(es []*domain.Edge, vertical bool, fontSize float64) {
+	const gap = 4.0
+	boxH := fontSize + 4
+	n := float64(len(es))
+	for i, e := range es {
+		length := domain.PolylineLength(e.Points)
+		step := math.Max(length/(n+1), boxH+gap)
+		at := length/2 + (float64(i)-(n-1)/2)*step
+		at = math.Max(0, math.Min(length, at))
+		if e.From > e.To {
+			at = length - at
+		}
+		e.LabelPos = domain.PolylinePointAt(e.Points, at)
+		if vertical {
+			e.LabelPos.Y += fontSize - boxH/2
+		}
+	}
+}
+
+// normalizeOrigin shifts the whole drawing so no node, edge point, or label
+// box has a negative coordinate. Parallel-edge offsets and wide labels can
+// push content past the left or top edge; without this the renderer would
+// clip them.
+func normalizeOrigin(g *domain.Graph, opts Options) {
+	minX, minY := 0.0, 0.0
+	for _, n := range g.Nodes {
+		minX, minY = math.Min(minX, n.Pos.X), math.Min(minY, n.Pos.Y)
+	}
+	for _, e := range g.Edges {
+		for _, p := range e.Points {
+			minX, minY = math.Min(minX, p.X), math.Min(minY, p.Y)
+		}
+		if r, ok := labelRect(e, opts.FontSize); ok {
+			minX, minY = math.Min(minX, r.Min.X), math.Min(minY, r.Min.Y)
+		}
+	}
+	if minX == 0 && minY == 0 {
+		return
+	}
+	dx, dy := -minX, -minY
+	for _, n := range g.Nodes {
+		n.Pos.X += dx
+		n.Pos.Y += dy
+	}
+	for _, e := range g.Edges {
+		for j := range e.Points {
+			e.Points[j].X += dx
+			e.Points[j].Y += dy
+		}
+		e.LabelPos.X += dx
+		e.LabelPos.Y += dy
 	}
 }
 
@@ -278,6 +443,14 @@ func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) {
 		pts[0] = clipToBox(pts[0], domain.Size{W: from.w, H: from.h}, pts[1])
 		last := len(pts) - 1
 		pts[last] = clipToBox(pts[last], domain.Size{W: to.w, H: to.h}, pts[last-1])
+		// The chain was built while the edge was reversed to break a cycle.
+		// The edge direction is restored by now, so flip the points too or
+		// the arrowhead lands on the source node.
+		if from.real != nil && from.real.ID != e.From {
+			for i, j := 0, len(pts)-1; i < j; i, j = i+1, j-1 {
+				pts[i], pts[j] = pts[j], pts[i]
+			}
+		}
 		e.Points = pts
 	}
 }
@@ -342,24 +515,21 @@ func clipToBox(center domain.Point, size domain.Size, target domain.Point) domai
 	return domain.Point{X: center.X + dx*t, Y: center.Y + dy*t}
 }
 
-// bounds computes the diagram extent over node boxes and routed edge points.
-func bounds(g *domain.Graph) (width, height float64) {
+// bounds computes the diagram extent over node boxes, routed edge points,
+// and edge label boxes.
+func bounds(g *domain.Graph, opts Options) (width, height float64) {
 	for _, n := range g.Nodes {
-		if r := n.Pos.X + n.Size.W; r > width {
-			width = r
-		}
-		if b := n.Pos.Y + n.Size.H; b > height {
-			height = b
-		}
+		width = math.Max(width, n.Pos.X+n.Size.W)
+		height = math.Max(height, n.Pos.Y+n.Size.H)
 	}
 	for _, e := range g.Edges {
 		for _, p := range e.Points {
-			if p.X > width {
-				width = p.X
-			}
-			if p.Y > height {
-				height = p.Y
-			}
+			width = math.Max(width, p.X)
+			height = math.Max(height, p.Y)
+		}
+		if r, ok := labelRect(e, opts.FontSize); ok {
+			width = math.Max(width, r.Min.X+r.Size.W)
+			height = math.Max(height, r.Min.Y+r.Size.H)
 		}
 	}
 	return width, height
