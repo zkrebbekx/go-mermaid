@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.3...v0.1.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* **layout:** keep parallel edge labels apart and point reversed edges at their target ([#29](https://github.com/zkrebbekx/go-mermaid/issues/29)) ([a2fbfeb](https://github.com/zkrebbekx/go-mermaid/commit/a2fbfeb81b8ae35d758879b6ec52f7216e21c055)), closes [#27](https://github.com/zkrebbekx/go-mermaid/issues/27)
+
 ## [0.1.3](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.2...v0.1.3) (2026-06-14)
 
 
