@@ -21,6 +21,10 @@ type Edge struct {
 	Label string
 	Arrow Arrow
 
+	// Style holds optional per-edge overrides from a linkStyle directive.
+	// nil means use the theme and the arrow kind.
+	Style *Style
+
 	// Points is the laid-out polyline from source to target, including
 	// any bend points. Empty until layout runs.
 	Points []Point

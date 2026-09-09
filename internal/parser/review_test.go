@@ -9,21 +9,21 @@ import (
 func TestClickURLSanitization(t *testing.T) {
 	Convey("Given click directives with various URLs", t, func() {
 		Convey("When the target uses the javascript: scheme", func() {
-			_, _, links := Preprocess("graph TD\nA\nclick A \"javascript:alert(1)\"")
+			_, _, links, _ := Preprocess("graph TD\nA\nclick A \"javascript:alert(1)\"")
 			Convey("Then the link is rejected", func() {
 				So(links["A"], ShouldEqual, "")
 			})
 		})
 
 		Convey("When the target is an https URL", func() {
-			_, _, links := Preprocess("graph TD\nA\nclick A \"https://example.com\"")
+			_, _, links, _ := Preprocess("graph TD\nA\nclick A \"https://example.com\"")
 			Convey("Then the link is kept", func() {
 				So(links["A"], ShouldEqual, "https://example.com")
 			})
 		})
 
 		Convey("When the target is a relative path", func() {
-			_, _, links := Preprocess("graph TD\nA\nclick A \"/docs/x\"")
+			_, _, links, _ := Preprocess("graph TD\nA\nclick A \"/docs/x\"")
 			Convey("Then the link is kept", func() {
 				So(links["A"], ShouldEqual, "/docs/x")
 			})
@@ -33,7 +33,7 @@ func TestClickURLSanitization(t *testing.T) {
 
 func TestInlineClassInsideLabel(t *testing.T) {
 	Convey("Given a node whose label text contains ':::'", t, func() {
-		src, _, _ := Preprocess("graph LR\nA[\"a:::b\"]")
+		src, _, _, _ := Preprocess("graph LR\nA[\"a:::b\"]")
 
 		Convey("When preprocessing styling directives", func() {
 			Convey("Then the label is left intact and no class is stripped", func() {

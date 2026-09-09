@@ -25,8 +25,14 @@ type Task struct {
 	Section string
 	AfterID string
 	StartIn string // raw start date token (empty if "after")
+	EndIn   string // raw end date token, for the "start, end" form
 	Days    int
 	Line    int // source line, for error reporting
+
+	// Status is a tag such as done, active or crit. Milestone marks a
+	// zero-length point rather than a bar.
+	Status    string
+	Milestone bool
 
 	Start    time.Time
 	resolved bool
@@ -101,18 +107,41 @@ func parseTask(line, section string, lineNo int) (*Task, error) {
 		case f == "":
 		case strings.HasPrefix(f, "after "):
 			t.AfterID = strings.TrimSpace(f[len("after "):])
+		case isStatusTag(f):
+			// done / active / crit / milestone are tags, not the task id.
+			if strings.EqualFold(f, "milestone") {
+				t.Milestone = true
+			} else {
+				t.Status = strings.ToLower(f)
+			}
 		case isDuration(f):
 			t.Days = parseDuration(f)
 		case looksLikeDate(f):
-			t.StartIn = f
+			// The second date in `Task : 2024-01-01, 2024-01-05` is the end,
+			// not another start.
+			if t.StartIn == "" {
+				t.StartIn = f
+			} else {
+				t.EndIn = f
+			}
 		default:
 			t.ID = f // bare token is the task id
 		}
 	}
-	if t.Days == 0 {
+	if t.Days == 0 && t.EndIn == "" && !t.Milestone {
 		return nil, syntax.Errorf(lineNo, 1, "task %q has no duration", t.Name)
 	}
 	return t, nil
+}
+
+// isStatusTag reports whether a field is one of the Mermaid task tags rather
+// than an id, a date or a duration.
+func isStatusTag(f string) bool {
+	switch strings.ToLower(f) {
+	case "done", "active", "crit", "milestone":
+		return true
+	}
+	return false
 }
 
 // resolve computes each task's Start from its date or "after" dependency.
@@ -135,6 +164,18 @@ func (d *Diagram) resolve() error {
 			return syntax.Errorf(t.Line, 1, "task %q has invalid start date %q", t.Name, t.StartIn)
 		}
 		t.Start, t.resolved = v, true
+		// The `start, end` form gives the length as a second date.
+		if t.EndIn != "" {
+			e, endErr := time.Parse(d.Layout, t.EndIn)
+			if endErr != nil {
+				return syntax.Errorf(t.Line, 1, "task %q has invalid end date %q", t.Name, t.EndIn)
+			}
+			days := int(e.Sub(v).Hours() / 24)
+			if days < 0 {
+				return syntax.Errorf(t.Line, 1, "task %q ends before it starts", t.Name)
+			}
+			t.Days = days
+		}
 	}
 	for {
 		progress, pending := false, (*Task)(nil)

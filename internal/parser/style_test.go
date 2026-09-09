@@ -19,7 +19,7 @@ func TestPreprocess(t *testing.T) {
 		}, "\n")
 
 		Convey("When preprocessing", func() {
-			cleaned, styles, _ := Preprocess(src)
+			cleaned, styles, _, _ := Preprocess(src)
 
 			Convey("Then styling directives are removed from the source", func() {
 				So(cleaned, ShouldNotContainSubstring, "classDef")
@@ -44,7 +44,7 @@ func TestPreprocess(t *testing.T) {
 
 	Convey("Given click directives", t, func() {
 		Convey("When preprocessing", func() {
-			cleaned, _, links := Preprocess("graph TD\nA --> B\nclick A href \"https://x.dev\"\nclick B \"https://y.dev\"")
+			cleaned, _, links, _ := Preprocess("graph TD\nA --> B\nclick A href \"https://x.dev\"\nclick B \"https://y.dev\"")
 
 			Convey("Then links are extracted and stripped", func() {
 				So(links["A"], ShouldEqual, "https://x.dev")
@@ -56,7 +56,7 @@ func TestPreprocess(t *testing.T) {
 
 	Convey("Given source with no styling", t, func() {
 		Convey("When preprocessing", func() {
-			cleaned, styles, _ := Preprocess("graph TD\nA --> B")
+			cleaned, styles, _, _ := Preprocess("graph TD\nA --> B")
 
 			Convey("Then the source is unchanged and styles are empty", func() {
 				So(cleaned, ShouldEqual, "graph TD\nA --> B")

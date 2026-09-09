@@ -126,12 +126,25 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved boo
 	if e.Arrow == domain.ArrowThick {
 		width = "3"
 	}
+	stroke := pal.Edge
+	// A linkStyle directive overrides the colour, width and dash pattern.
+	if st := e.Style; st != nil {
+		if st.Stroke != "" {
+			stroke = st.Stroke
+		}
+		if st.StrokeWidth != "" {
+			width = st.StrokeWidth
+		}
+		if st.StrokeDash != "" {
+			dash = fmt.Sprintf(` stroke-dasharray="%s"`, esc(st.StrokeDash))
+		}
+	}
 	marker := ` marker-end="url(#arrow)"`
 	if e.Arrow == domain.ArrowOpen {
 		marker = ""
 	}
 	fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s" stroke-width="%s"%s%s/>`,
-		strings.TrimSpace(d.String()), pal.Edge, width, dash, marker)
+		strings.TrimSpace(d.String()), esc(stroke), width, dash, marker)
 	b.WriteByte('\n')
 
 	if e.Label != "" {
@@ -229,6 +242,7 @@ func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Optio
 	}
 	x, y, w, h := n.Pos.X, n.Pos.Y, n.Size.W, n.Size.H
 	fill, stroke, textColor := pal.NodeFill, pal.NodeStroke, pal.Text
+	extra := ""
 	if n.Style != nil {
 		if n.Style.Fill != "" {
 			fill = n.Style.Fill
@@ -239,6 +253,18 @@ func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Optio
 		if n.Style.Color != "" {
 			textColor = n.Style.Color
 		}
+		if n.Style.StrokeWidth != "" {
+			extra += fmt.Sprintf(` stroke-width="%s"`, esc(n.Style.StrokeWidth))
+		}
+		if n.Style.StrokeDash != "" {
+			extra += fmt.Sprintf(` stroke-dasharray="%s"`, esc(n.Style.StrokeDash))
+		}
+	}
+	// stroke-width and stroke-dasharray are inherited, so one wrapping group
+	// applies them to whichever shape is drawn below.
+	if extra != "" {
+		fmt.Fprintf(b, `    <g%s>`, extra)
+		b.WriteByte('\n')
 	}
 	switch n.Shape {
 	case domain.ShapeRound, domain.ShapeStadium:
@@ -309,6 +335,9 @@ func writeNode(b *strings.Builder, n *domain.Node, pal theme.Palette, opts Optio
 	label := n.Label
 	if label == "" {
 		label = n.ID
+	}
+	if extra != "" {
+		b.WriteString("    </g>\n")
 	}
 	b.WriteString("    ")
 	svgutil.MultilineText(b, svgutil.SplitLines(label), x+w/2, y+h/2+opts.FontSize*0.35, opts.FontSize+2, textColor, "")

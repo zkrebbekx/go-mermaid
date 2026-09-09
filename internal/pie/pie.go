@@ -24,6 +24,10 @@ type Slice struct {
 type Diagram struct {
 	Title  string
 	Slices []Slice
+
+	// ShowData asks the legend to include the raw value, set by the
+	// `showData` keyword. It was previously stripped and discarded.
+	ShowData bool
 }
 
 // Total returns the sum of all slice values.
@@ -50,11 +54,23 @@ func Parse(src string) (*Diagram, error) {
 				return nil, syntax.Errorf(lineNo, 1, "expected 'pie' header")
 			}
 			rest := strings.TrimSpace(strings.TrimPrefix(line, "pie"))
-			rest = strings.TrimSpace(strings.TrimPrefix(rest, "showData"))
+			if r, ok := strings.CutPrefix(rest, "showData"); ok {
+				d.ShowData = true
+				rest = strings.TrimSpace(r)
+			}
 			if t, ok := strings.CutPrefix(rest, "title "); ok {
 				d.Title = strings.TrimSpace(t)
 			}
 			headerSeen = true
+			continue
+		}
+		// Mermaid also allows `title` on its own line after the header.
+		if t, ok := strings.CutPrefix(line, "title "); ok {
+			d.Title = strings.TrimSpace(t)
+			continue
+		}
+		if strings.EqualFold(line, "showData") {
+			d.ShowData = true
 			continue
 		}
 		if err := d.parseSlice(line, lineNo); err != nil {

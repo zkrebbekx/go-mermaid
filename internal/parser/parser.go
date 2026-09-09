@@ -105,7 +105,7 @@ func (p *parser) parseHeader() error {
 
 // parseStatement parses a chain like A[x] --> B -->|label| C.
 func (p *parser) parseStatement() error {
-	from, err := p.parseNodeRef()
+	from, err := p.parseNodeList()
 	if err != nil {
 		return err
 	}
@@ -145,19 +145,44 @@ func (p *parser) parseStatement() error {
 			}
 		}
 
-		to, err := p.parseNodeRef()
+		to, err := p.parseNodeList()
 		if err != nil {
 			return err
 		}
-		p.graph.Edges = append(p.graph.Edges, &domain.Edge{
-			From:  from.ID,
-			To:    to.ID,
-			Label: label,
-			Arrow: arrowKind(arrowTok.Val),
-		})
+		// `A & B --> C & D` links every node on the left to every node on
+		// the right, so the lists form a small cross product.
+		for _, f := range from {
+			for _, t := range to {
+				p.graph.Edges = append(p.graph.Edges, &domain.Edge{
+					From:  f.ID,
+					To:    t.ID,
+					Label: label,
+					Arrow: arrowKind(arrowTok.Val),
+				})
+			}
+		}
 		from = to
 	}
 	return nil
+}
+
+// parseNodeList reads one or more node references joined by "&". Mermaid uses
+// it to link several nodes at once, as in `A --> B & C`.
+func (p *parser) parseNodeList() ([]*domain.Node, error) {
+	first, err := p.parseNodeRef()
+	if err != nil {
+		return nil, err
+	}
+	nodes := []*domain.Node{first}
+	for p.at(lexer.Amp) {
+		p.next()
+		n, err := p.parseNodeRef()
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, n)
+	}
+	return nodes, nil
 }
 
 // parseNodeRef parses an identifier with an optional shape+label, registering

@@ -5,6 +5,11 @@ type Style struct {
 	Fill   string
 	Stroke string
 	Color  string // text color
+
+	// StrokeWidth is the outline width in pixels, empty for the default.
+	StrokeWidth string
+	// StrokeDash is an SVG stroke-dasharray, empty for a solid line.
+	StrokeDash string
 }
 
 // Node is a vertex in a flowchart.
