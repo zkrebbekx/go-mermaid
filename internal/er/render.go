@@ -71,7 +71,7 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 	b.WriteByte('\n')
 
 	for i, r := range d.Relationships {
-		writeRelationship(&b, r, g.Edges[i], pal)
+		writeRelationship(&b, r, g.Edges[i], pal, o.FontSize)
 	}
 	for _, e := range d.Entities {
 		writeEntity(&b, e, g.NodeByID(e.Name), pal, o)
@@ -109,7 +109,7 @@ func writeEntity(b *strings.Builder, e *Entity, n *domain.Node, pal theme.Palett
 	}
 }
 
-func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal theme.Palette) {
+func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal theme.Palette, fontSize float64) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -131,6 +131,8 @@ func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal 
 	last := len(e.Points) - 1
 	writeCrow(b, r.LeftKind, e.Points[0], e.Points[1], pal)
 	writeCrow(b, r.RightKind, e.Points[last], e.Points[last-1], pal)
+	writeCard(b, r.LeftCard, e.Points[0], e.Points[1], pal, fontSize)
+	writeCard(b, r.RightCard, e.Points[last], e.Points[last-1], pal, fontSize)
 
 	if r.Label != "" {
 		mid := e.LabelPos
@@ -206,4 +208,26 @@ func entitySize(e *Entity, face svgutil.Face, fontSize float64) domain.Size {
 		h += float64(len(e.Attributes)) * (fontSize + rowPad)
 	}
 	return domain.Size{W: w, H: h}
+}
+
+// writeCard draws the cardinality text just inside the end of a relationship
+// line. The parser reads "1" and "0..N" from the crow's-foot operator; before
+// this they were computed and never drawn.
+func writeCard(b *strings.Builder, card string, tip, next domain.Point, pal theme.Palette, fontSize float64) {
+	if card == "" {
+		return
+	}
+	dx, dy := tip.X-next.X, tip.Y-next.Y
+	d := math.Hypot(dx, dy)
+	if d == 0 {
+		return
+	}
+	dx, dy = dx/d, dy/d
+	// Step back along the line past the crow's foot, then offset sideways so
+	// the text does not sit on the line itself.
+	x := tip.X - dx*22 - dy*8
+	y := tip.Y - dy*22 + dx*8 + fontSize*0.35
+	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" font-size="%s">%s</text>`,
+		svgutil.Num(x), svgutil.Num(y), pal.Text, svgutil.Num(fontSize-2), svgutil.Esc(card))
+	b.WriteByte('\n')
 }

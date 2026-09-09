@@ -21,6 +21,7 @@ func Parse(src string) (*Diagram, error) {
 	lines := strings.Split(src, "\n")
 
 	headerSeen := false
+	ns := "" // name of the enclosing namespace block, empty at the top level
 	for i := 0; i < len(lines); i++ {
 		lineNo := i + 1
 		line := strings.TrimSpace(stripComment(lines[i]))
@@ -36,12 +37,24 @@ func Parse(src string) (*Diagram, error) {
 		}
 
 		switch {
+		case line == "}":
+			ns = ""
+
+		case strings.HasPrefix(line, "namespace ") && strings.HasSuffix(line, "{"):
+			ns = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "namespace "), "{"))
+			if d.namespace(ns) == nil {
+				d.Namespaces = append(d.Namespaces, &Namespace{Name: ns})
+			}
+
+		case strings.HasPrefix(line, "direction "):
+			d.Direction = strings.ToUpper(strings.TrimSpace(strings.TrimPrefix(line, "direction ")))
+
 		case strings.HasPrefix(line, "class ") && strings.HasSuffix(line, "{"):
 			name := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "class "), "{"))
-			c := d.ensureClass(className(name))
+			c := d.declare(name, ns)
 			i = d.consumeBlock(c, lines, i+1) // advance past the block
 		case strings.HasPrefix(line, "class "):
-			d.ensureClass(className(strings.TrimSpace(strings.TrimPrefix(line, "class "))))
+			d.declare(strings.TrimSpace(strings.TrimPrefix(line, "class ")), ns)
 		case relIndex(line) >= 0:
 			if err := d.parseRelation(line, lineNo); err != nil {
 				return nil, err
@@ -75,6 +88,28 @@ func (d *Diagram) consumeBlock(c *Class, lines []string, start int) int {
 	return len(lines) - 1
 }
 
+// declare registers a class written as `Box~T~`, keeping the generic
+// parameters for display while using the bare name as the identity.
+func (d *Diagram) declare(name, ns string) *Class {
+	name = strings.TrimSpace(name)
+	c := d.ensureClass(className(name))
+	if strings.ContainsRune(name, '~') && c.Display == "" {
+		c.Display = name
+	}
+	if ns != "" {
+		c.Namespace = ns
+		if n := d.namespace(ns); n != nil {
+			for _, m := range n.Members {
+				if m == c.Name {
+					return c
+				}
+			}
+			n.Members = append(n.Members, c.Name)
+		}
+	}
+	return c
+}
+
 func (d *Diagram) parseShorthandMember(line string) {
 	name, member, _ := strings.Cut(line, ":")
 	c := d.ensureClass(className(strings.TrimSpace(name)))
@@ -92,25 +127,56 @@ func (d *Diagram) parseRelation(line string, lineNo int) error {
 	if idx < 0 {
 		return syntax.Errorf(lineNo, 1, "invalid relationship")
 	}
-	from := className(strings.TrimSpace(core[:idx]))
-	to := className(strings.TrimSpace(core[idx+len(op):]))
+	leftName, leftCard := splitCardinality(core[:idx], true)
+	rightName, rightCard := splitCardinality(core[idx+len(op):], false)
+	from := className(leftName)
+	to := className(rightName)
 	if from == "" || to == "" {
 		return syntax.Errorf(lineNo, 1, "relationship needs two classes")
 	}
-	d.ensureClass(from)
-	d.ensureClass(to)
+	d.declare(leftName, "")
+	d.declare(rightName, "")
 	d.Relations = append(d.Relations, &Relation{
 		From: from, To: to, Label: label,
-		Dashed: strings.Contains(op, ".."),
-		Left:   leftHead(op),
-		Right:  rightHead(op),
+		Dashed:    strings.Contains(op, ".."),
+		Left:      leftHead(op),
+		Right:     rightHead(op),
+		LeftCard:  leftCard,
+		RightCard: rightCard,
 	})
 	return nil
 }
 
-// addMember classifies a member as a method (contains "(") or attribute.
+// splitCardinality separates a quoted multiplicity from the class name beside
+// it. Mermaid writes the multiplicity next to the operator, so it trails the
+// name on the left of the arrow and leads it on the right. Without this the
+// quoted text became part of the class name.
+func splitCardinality(s string, trailing bool) (name, card string) {
+	s = strings.TrimSpace(s)
+	if trailing {
+		if i := strings.LastIndexByte(s, '"'); i == len(s)-1 {
+			if j := strings.LastIndexByte(s[:i], '"'); j >= 0 {
+				return strings.TrimSpace(s[:j]), s[j+1 : i]
+			}
+		}
+		return s, ""
+	}
+	if strings.HasPrefix(s, `"`) {
+		if j := strings.IndexByte(s[1:], '"'); j >= 0 {
+			return strings.TrimSpace(s[j+2:]), s[1 : j+1]
+		}
+	}
+	return s, ""
+}
+
+// addMember classifies a member as a method (contains "("), an annotation
+// written as <<interface>>, or an attribute.
 func (c *Class) addMember(m string) {
 	if m == "" {
+		return
+	}
+	if strings.HasPrefix(m, "<<") && strings.HasSuffix(m, ">>") {
+		c.Annotation = strings.TrimSpace(m[2 : len(m)-2])
 		return
 	}
 	if strings.Contains(m, "(") {

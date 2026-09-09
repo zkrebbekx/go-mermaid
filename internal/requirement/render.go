@@ -87,11 +87,47 @@ func rows(n *Node) []string {
 		if v := n.Fields["id"]; v != "" {
 			out = append(out, "id: "+v)
 		}
+		// text is the body of the requirement. It was parsed and never drawn.
+		if v := n.Fields["text"]; v != "" {
+			out = append(out, wrapField("text", v)...)
+		}
 		if v := n.Fields["risk"]; v != "" {
 			out = append(out, "risk: "+v)
 		}
+		if v := n.Fields["verifymethod"]; v != "" {
+			out = append(out, "verifymethod: "+v)
+		}
 	}
 	return out
+}
+
+// fieldWrap is the longest row, in characters, before a field value wraps.
+const fieldWrap = 34
+
+// wrapField renders a long field value over several rows so one sentence does
+// not stretch the box across the diagram.
+func wrapField(name, value string) []string {
+	first := name + ": "
+	words := strings.Fields(value)
+	if len(words) == 0 {
+		return nil
+	}
+	var out []string
+	cur := first
+	for _, w := range words {
+		candidate := cur
+		if candidate != first && !strings.HasSuffix(candidate, " ") {
+			candidate += " "
+		}
+		candidate += w
+		if len([]rune(candidate)) > fieldWrap && cur != first {
+			out = append(out, cur)
+			cur = w
+			continue
+		}
+		cur = candidate
+	}
+	return append(out, cur)
 }
 
 func tagFor(n *Node) string {

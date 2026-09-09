@@ -32,7 +32,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	g := &domain.Graph{Direction: domain.TopBottom}
+	g := &domain.Graph{Direction: directionOf(d.Direction)}
 	for _, c := range d.Classes {
 		n := &domain.Node{ID: c.Name, Label: c.Name, Shape: domain.ShapeRect}
 		n.Size = classSize(c, svgutil.FaceFor(o.FontFace), o.FontSize)
@@ -49,12 +49,61 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 	return svg(d, g, res, o), nil
 }
 
+const (
+	clusterPad = 14.0 // gap between a namespace box and its classes
+	cardGap    = 6.0  // gap between a relationship end and its multiplicity
+)
+
+// directionOf maps a `direction` line onto a layout direction.
+func directionOf(dir string) domain.Direction {
+	switch dir {
+	case "LR":
+		return domain.LeftRight
+	case "RL":
+		return domain.RightLeft
+	case "BT":
+		return domain.BottomTop
+	default:
+		return domain.TopBottom
+	}
+}
+
+// namespaceBox returns the box enclosing a namespace's classes, with room for
+// its title. ok is false when no member was placed.
+func namespaceBox(ns *Namespace, g *domain.Graph, fontSize float64) (x, y, w, h float64, ok bool) {
+	var bd svgutil.Bounds
+	for _, name := range ns.Members {
+		n := g.NodeByID(name)
+		if n == nil {
+			continue
+		}
+		bd.AddRect(n.Pos.X, n.Pos.Y, n.Size.W, n.Size.H)
+	}
+	if bd.Empty() {
+		return 0, 0, 0, 0, false
+	}
+	titleH := fontSize + 6
+	return bd.MinX - clusterPad, bd.MinY - clusterPad - titleH,
+		bd.MaxX - bd.MinX + clusterPad*2, bd.MaxY - bd.MinY + clusterPad*2 + titleH, true
+}
+
 func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byte {
 	pal := theme.For(o.Theme)
 	pad := o.Padding
 	titleH := svgutil.TitleHeight(o.Title, o.FontSize)
-	w := res.Width + pad*2
-	h := res.Height + titleH + pad*2
+
+	// Namespace boxes reach outside the class extents the layout reported.
+	var bd svgutil.Bounds
+	bd.AddRect(0, 0, res.Width, res.Height)
+	for _, ns := range d.Namespaces {
+		if nx, ny, nw, nh, ok := namespaceBox(ns, g, o.FontSize); ok {
+			bd.AddRect(nx, ny, nw, nh)
+		}
+	}
+	shiftX, shiftY := bd.Offset()
+	contentW, contentH := bd.Size()
+	w := contentW + pad*2
+	h := contentH + titleH + pad*2
 
 	var b strings.Builder
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="0 0 %s %s" font-family="%s" font-size="%s">`,
@@ -67,11 +116,14 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 			svgutil.Num(w/2), svgutil.Num(pad+o.FontSize), pal.Text, svgutil.Esc(o.Title))
 		b.WriteByte('\n')
 	}
-	fmt.Fprintf(&b, `  <g transform="translate(%s,%s)">`, svgutil.Num(pad), svgutil.Num(pad+titleH))
+	fmt.Fprintf(&b, `  <g transform="translate(%s,%s)">`, svgutil.Num(pad+shiftX), svgutil.Num(pad+titleH+shiftY))
 	b.WriteByte('\n')
 
+	for _, ns := range d.Namespaces {
+		writeNamespace(&b, ns, g, pal, o)
+	}
 	for i, r := range d.Relations {
-		writeRelation(&b, r, g.Edges[i], pal)
+		writeRelation(&b, r, g.Edges[i], pal, o)
 	}
 	for _, c := range d.Classes {
 		writeClass(&b, c, g.NodeByID(c.Name), pal, o)
@@ -92,8 +144,16 @@ func writeClass(b *strings.Builder, c *Class, n *domain.Node, pal theme.Palette,
 	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s"/>`,
 		svgutil.Num(x), svgutil.Num(y), svgutil.Num(w), svgutil.Num(n.Size.H), pal.NodeFill, pal.NodeStroke)
 	b.WriteByte('\n')
+	nameY := y + o.FontSize
+	if c.Annotation != "" {
+		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle">%s</text>`,
+			svgutil.Num(x+w/2), svgutil.Num(nameY), pal.Text, svgutil.Esc("«"+c.Annotation+"»"))
+		b.WriteByte('\n')
+		nameY += o.FontSize + 2
+		header += o.FontSize + 2
+	}
 	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" font-weight="bold">%s</text>`,
-		svgutil.Num(x+w/2), svgutil.Num(y+o.FontSize), pal.Text, svgutil.Esc(c.Name))
+		svgutil.Num(x+w/2), svgutil.Num(nameY), pal.Text, svgutil.Esc(c.Label()))
 	b.WriteByte('\n')
 
 	cy := y + header
@@ -123,7 +183,7 @@ func writeClass(b *strings.Builder, c *Class, n *domain.Node, pal theme.Palette,
 	}
 }
 
-func writeRelation(b *strings.Builder, r *Relation, e *domain.Edge, pal theme.Palette) {
+func writeRelation(b *strings.Builder, r *Relation, e *domain.Edge, pal theme.Palette, o RenderOptions) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -148,6 +208,10 @@ func writeRelation(b *strings.Builder, r *Relation, e *domain.Edge, pal theme.Pa
 	pn, pm := e.Points[len(e.Points)-1], e.Points[len(e.Points)-2]
 	rdx, rdy := unit(pn, pm)
 	writeHead(b, r.Right, pn, rdx, rdy, pal)
+
+	writeCardinality(b, r.LeftCard, e.Points[0], e.Points[1], pal, o)
+	last := len(e.Points) - 1
+	writeCardinality(b, r.RightCard, e.Points[last], e.Points[last-1], pal, o)
 
 	if r.Label != "" {
 		mid := e.LabelPos
@@ -203,7 +267,12 @@ func unit(a, b domain.Point) (float64, float64) {
 
 // classSize computes a box size that fits the name and all members.
 func classSize(c *Class, face svgutil.Face, fontSize float64) domain.Size {
-	maxW := face.Width(c.Name, fontSize)
+	maxW := face.Width(c.Label(), fontSize)
+	if c.Annotation != "" {
+		if wd := face.Width("«"+c.Annotation+"»", fontSize); wd > maxW {
+			maxW = wd
+		}
+	}
 	for _, m := range append(append([]string{}, c.Attributes...), c.Methods...) {
 		if wd := face.Width(m, fontSize); wd > maxW {
 			maxW = wd
@@ -214,9 +283,43 @@ func classSize(c *Class, face svgutil.Face, fontSize float64) domain.Size {
 		w = 80
 	}
 	h := fontSize + 10 // header
+	if c.Annotation != "" {
+		h += fontSize + 2
+	}
 	rows := len(c.Attributes) + len(c.Methods)
 	if rows > 0 {
 		h += float64(rows) * (fontSize + rowPad)
 	}
 	return domain.Size{W: w, H: h}
+}
+
+// writeCardinality draws a multiplicity label just inside the end of a
+// relationship line. tip is the end point and next is the neighbouring
+// waypoint, so the label sits along the line rather than on top of the class.
+func writeCardinality(b *strings.Builder, card string, tip, next domain.Point, pal theme.Palette, o RenderOptions) {
+	if card == "" {
+		return
+	}
+	dx, dy := unit(tip, next)
+	// Step along the line past the end decoration, then offset perpendicular
+	// so the line does not strike through the text.
+	x := tip.X + dx*(cardGap+10) - dy*9
+	y := tip.Y + dy*(cardGap+10) + dx*9 + o.FontSize*0.35
+	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" font-size="%s">%s</text>`,
+		svgutil.Num(x), svgutil.Num(y), pal.Text, svgutil.Num(o.FontSize-2), svgutil.Esc(card))
+	b.WriteByte('\n')
+}
+
+// writeNamespace draws the dashed box and title of a namespace block.
+func writeNamespace(b *strings.Builder, ns *Namespace, g *domain.Graph, pal theme.Palette, o RenderOptions) {
+	x, y, w, h, ok := namespaceBox(ns, g, o.FontSize)
+	if !ok {
+		return
+	}
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="none" stroke="%s" stroke-dasharray="4,3" rx="6"/>`,
+		svgutil.Num(x), svgutil.Num(y), svgutil.Num(w), svgutil.Num(h), pal.NodeStroke)
+	b.WriteByte('\n')
+	fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s">%s</text>`,
+		svgutil.Num(x+6), svgutil.Num(y+o.FontSize), pal.Text, svgutil.Esc(ns.Name))
+	b.WriteByte('\n')
 }
