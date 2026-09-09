@@ -160,8 +160,12 @@ func writeFrame(b *strings.Builder, f *Frame, lay *Layout, pal theme.Palette, o 
 	top := rowY(lay, f.StartRow) - 16
 	bot := rowY(lay, f.EndRow) + 14
 
-	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="none" stroke="%s" stroke-dasharray="2,2"/>`,
-		svgutil.Num(x), svgutil.Num(top), svgutil.Num(w), svgutil.Num(bot-top), pal.NodeStroke)
+	fill := "none"
+	if f.Color != "" {
+		fill = f.Color
+	}
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" fill-opacity="0.15" stroke="%s" stroke-dasharray="2,2"/>`,
+		svgutil.Num(x), svgutil.Num(top), svgutil.Num(w), svgutil.Num(bot-top), svgutil.Esc(fill), pal.NodeStroke)
 	b.WriteByte('\n')
 
 	tabW := svgutil.FaceFor(o.FontFace).Width(f.Type, o.FontSize) + 12

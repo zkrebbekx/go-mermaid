@@ -85,6 +85,10 @@ type Frame struct {
 	StartRow int
 	EndRow   int
 	Sections []*Section
+
+	// Color is the background written as `rect rgb(0, 0, 255)`. It is empty
+	// for every other frame kind.
+	Color string
 }
 
 // Diagram is a parsed sequence diagram.

@@ -54,7 +54,13 @@ func Parse(src string) (*Diagram, error) {
 			continue
 		}
 		indent := leadingSpaces(raw)
-		text := cleanText(strings.TrimSpace(stripComment(raw)))
+		trimmed := strings.TrimSpace(stripComment(raw))
+		// ::icon(...) and :::className decorate the node above them. Without
+		// this they became child nodes labelled with the decoration text.
+		if strings.HasPrefix(trimmed, "::") {
+			continue
+		}
+		text := cleanText(trimmed)
 		n := &Node{Text: text}
 
 		for len(stack) > 0 && stack[len(stack)-1].indent >= indent {

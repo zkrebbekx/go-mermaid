@@ -65,6 +65,11 @@ func svg(d *Diagram, o RenderOptions) []byte {
 					span = 1
 				}
 			}
+			if blk.Space {
+				// A gap in the grid: advance the column, draw nothing.
+				col += span
+				continue
+			}
 			x := pad + float64(col)*cellW
 			bw := float64(span)*cellW - gap
 			fmt.Fprintf(&b, `  <rect x="%s" y="%s" width="%s" height="%s" rx="4" fill="%s" stroke="%s"/>`,

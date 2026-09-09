@@ -29,6 +29,10 @@ type Rel struct {
 	From  string
 	To    string
 	Label string
+
+	// Tech is the optional technology written as the fourth argument, such
+	// as the protocol in Rel(a, b, "reads", "HTTPS").
+	Tech string
 }
 
 // Diagram is a parsed C4 diagram.
@@ -67,12 +71,20 @@ func Parse(src string) (*Diagram, error) {
 		switch {
 		case strings.HasPrefix(line, "title "):
 			d.Title = strings.TrimSpace(line[len("title "):])
+		case strings.HasPrefix(line, "Update"):
+			// UpdateElementStyle / UpdateRelStyle / UpdateLayoutConfig are
+			// styling directives. They contain "(", so without this case they
+			// fell through and drew an element box holding the style argument.
+
 		case strings.HasPrefix(line, "Rel") && strings.Contains(line, "("):
 			args := parseArgs(line)
 			if len(args) >= 2 {
 				r := &Rel{From: args[0], To: args[1]}
 				if len(args) >= 3 {
 					r.Label = args[2]
+				}
+				if len(args) >= 4 {
+					r.Tech = args[3]
 				}
 				d.Rels = append(d.Rels, r)
 			}

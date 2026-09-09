@@ -21,6 +21,10 @@ type Block struct {
 	ID    string
 	Label string
 	Span  int
+
+	// Space marks a gap in the grid rather than a drawn block. Mermaid
+	// writes it as `space` or `space:2`.
+	Space bool
 }
 
 // Diagram is a parsed block diagram.
@@ -99,14 +103,38 @@ func parseRow(line string) []*Block {
 
 	var blocks []*Block
 	for _, t := range tokens {
+		if isConnector(t) {
+			// An arrow between blocks is a link, not a cell. Without this it
+			// was tokenized like any other word and drawn as a labelled box.
+			continue
+		}
 		blocks = append(blocks, parseBlock(t))
 	}
 	return blocks
 }
 
+// isConnector reports whether a token is an arrow drawn between blocks.
+func isConnector(t string) bool {
+	switch t {
+	case "-->", "---", "<--", "<-->", "==>", "-.->", "~~~":
+		return true
+	}
+	return false
+}
+
 // parseBlock parses id["label"]:span into a Block.
 func parseBlock(t string) *Block {
 	b := &Block{Span: 1}
+	// A `space` or `space:2` token leaves a gap in the grid.
+	if t == "space" || strings.HasPrefix(t, "space:") {
+		b.Space = true
+		if i := strings.IndexByte(t, ':'); i >= 0 {
+			if n, err := strconv.Atoi(t[i+1:]); err == nil {
+				b.Span = n
+			}
+		}
+		return b
+	}
 	// trailing :span
 	if i := strings.LastIndexByte(t, ':'); i >= 0 {
 		if n, err := strconv.Atoi(t[i+1:]); err == nil {
