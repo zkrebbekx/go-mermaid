@@ -91,3 +91,68 @@ func TitleHeight(title string, fontSize float64) float64 {
 	}
 	return fontSize*1.4 + 12
 }
+
+// Bounds accumulates a content bounding box in diagram coordinates. A
+// renderer feeds it every drawn extent, then uses Offset to shift the
+// drawing so nothing sits at a negative coordinate, and Size for the canvas.
+// Without this a box that reaches left of the origin, such as a sequence
+// note placed left of the first participant, falls outside the canvas and
+// the viewer clips it.
+type Bounds struct {
+	MinX, MinY, MaxX, MaxY float64
+	set                    bool
+}
+
+// Add grows the bounds to include the point (x, y).
+func (b *Bounds) Add(x, y float64) {
+	if !b.set {
+		b.MinX, b.MinY, b.MaxX, b.MaxY = x, y, x, y
+		b.set = true
+		return
+	}
+	if x < b.MinX {
+		b.MinX = x
+	}
+	if y < b.MinY {
+		b.MinY = y
+	}
+	if x > b.MaxX {
+		b.MaxX = x
+	}
+	if y > b.MaxY {
+		b.MaxY = y
+	}
+}
+
+// AddRect grows the bounds to include the box at (x, y) of size w by h.
+func (b *Bounds) AddRect(x, y, w, h float64) {
+	b.Add(x, y)
+	b.Add(x+w, y+h)
+}
+
+// Empty reports whether nothing has been added yet.
+func (b *Bounds) Empty() bool { return !b.set }
+
+// Offset returns the shift that moves the content so its top-left corner is
+// at the origin. Both values are zero or positive.
+func (b *Bounds) Offset() (dx, dy float64) {
+	if !b.set {
+		return 0, 0
+	}
+	if b.MinX < 0 {
+		dx = -b.MinX
+	}
+	if b.MinY < 0 {
+		dy = -b.MinY
+	}
+	return dx, dy
+}
+
+// Size returns the extent of the content after Offset is applied.
+func (b *Bounds) Size() (w, h float64) {
+	if !b.set {
+		return 0, 0
+	}
+	dx, dy := b.Offset()
+	return b.MaxX + dx, b.MaxY + dy
+}
