@@ -23,7 +23,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	lay := Compute(d, Options{FontSize: o.FontSize, Padding: o.Padding})
+	lay := Compute(d, Options{FontSize: o.FontSize, Padding: o.Padding, FontFace: o.FontFace})
 	return svg(lay, o), nil
 }
 
@@ -32,7 +32,8 @@ func svg(lay *Layout, o RenderOptions) []byte {
 	pad := o.Padding
 	titleH := svgutil.TitleHeight(o.Title, o.FontSize)
 	contentW := lay.Width
-	if tw := svgutil.TextWidth(o.Title, o.FontSize); tw > contentW {
+	face := svgutil.FaceFor(o.FontFace)
+	if tw := face.Width(o.Title, o.FontSize); tw > contentW {
 		contentW = tw
 	}
 	w := contentW + pad*2
@@ -163,7 +164,7 @@ func writeFrame(b *strings.Builder, f *Frame, lay *Layout, pal theme.Palette, o 
 		svgutil.Num(x), svgutil.Num(top), svgutil.Num(w), svgutil.Num(bot-top), pal.NodeStroke)
 	b.WriteByte('\n')
 
-	tabW := svgutil.TextWidth(f.Type, o.FontSize) + 12
+	tabW := svgutil.FaceFor(o.FontFace).Width(f.Type, o.FontSize) + 12
 	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s"/>`,
 		svgutil.Num(x), svgutil.Num(top), svgutil.Num(tabW), svgutil.Num(o.FontSize+6), pal.NodeFill, pal.NodeStroke)
 	b.WriteByte('\n')
@@ -207,7 +208,7 @@ func writeBar(b *strings.Builder, bar *Bar, lay *Layout, pal theme.Palette) {
 
 // writeNote draws a note box and its text.
 func writeNote(b *strings.Builder, n *Note, lay *Layout, pal theme.Palette, o RenderOptions) {
-	x, w := noteBox(lay.Diagram, n, o.FontSize)
+	x, w := noteBox(lay.Diagram, n, svgutil.FaceFor(o.FontFace), o.FontSize)
 	h := o.FontSize + 12
 	y := n.Y - h/2
 	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="%s"/>`,

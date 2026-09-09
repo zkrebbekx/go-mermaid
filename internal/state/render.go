@@ -34,7 +34,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 		if s.Start || s.End {
 			n.Size = domain.Size{W: pseudoSize, H: pseudoSize}
 		} else {
-			n.Size = stateSize(s, o.FontSize)
+			n.Size = stateSize(s, svgutil.FaceFor(o.FontFace), o.FontSize)
 		}
 		g.Nodes = append(g.Nodes, n)
 	}
@@ -42,7 +42,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 		g.Edges = append(g.Edges, &domain.Edge{From: t.From, To: t.To, Label: t.Label})
 	}
 
-	res, err := layout.Compute(g, layout.Options{NodeSep: 45, RankSep: 85, FontSize: o.FontSize})
+	res, err := layout.Compute(g, layout.Options{NodeSep: 45, RankSep: 85, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +139,8 @@ func writeTransition(b *strings.Builder, t *Transition, g *domain.Graph, pal the
 	}
 }
 
-func stateSize(s *State, fontSize float64) domain.Size {
-	w := svgutil.TextWidth(s.Label, fontSize) + 24
+func stateSize(s *State, face svgutil.Face, fontSize float64) domain.Size {
+	w := face.Width(s.Label, fontSize) + 24
 	if w < 50 {
 		w = 50
 	}

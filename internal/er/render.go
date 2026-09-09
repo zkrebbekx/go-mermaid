@@ -35,14 +35,14 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 	g := &domain.Graph{Direction: domain.TopBottom}
 	for _, e := range d.Entities {
 		n := &domain.Node{ID: e.Name, Label: e.Name, Shape: domain.ShapeRect}
-		n.Size = entitySize(e, o.FontSize)
+		n.Size = entitySize(e, svgutil.FaceFor(o.FontFace), o.FontSize)
 		g.Nodes = append(g.Nodes, n)
 	}
 	for _, r := range d.Relationships {
 		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: r.Label})
 	}
 
-	res, err := layout.Compute(g, layout.Options{NodeSep: 55, RankSep: 95, FontSize: o.FontSize})
+	res, err := layout.Compute(g, layout.Options{NodeSep: 55, RankSep: 95, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
 		return nil, err
 	}
@@ -190,10 +190,10 @@ func writeCrow(b *strings.Builder, kind Card, tip, next domain.Point, pal theme.
 	}
 }
 
-func entitySize(e *Entity, fontSize float64) domain.Size {
-	maxW := svgutil.TextWidth(e.Name, fontSize)
+func entitySize(e *Entity, face svgutil.Face, fontSize float64) domain.Size {
+	maxW := face.Width(e.Name, fontSize)
 	for _, a := range e.Attributes {
-		if wd := svgutil.TextWidth(a, fontSize); wd > maxW {
+		if wd := face.Width(a, fontSize); wd > maxW {
 			maxW = wd
 		}
 	}

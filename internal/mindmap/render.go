@@ -82,7 +82,7 @@ func svg(d *Diagram, o RenderOptions) []byte {
 }
 
 func writeEdges(b *strings.Builder, n *Node, o RenderOptions, pal theme.Palette) {
-	nw := nodeWidth(n, o.FontSize)
+	nw := nodeWidth(n, svgutil.FaceFor(o.FontFace), o.FontSize)
 	for _, c := range n.Children {
 		x1 := n.X + nw
 		y1 := n.Y + rowH/2
@@ -98,7 +98,7 @@ func writeEdges(b *strings.Builder, n *Node, o RenderOptions, pal theme.Palette)
 }
 
 func writeNodes(b *strings.Builder, n *Node, o RenderOptions, pal theme.Palette) {
-	nw := nodeWidth(n, o.FontSize)
+	nw := nodeWidth(n, svgutil.FaceFor(o.FontFace), o.FontSize)
 	fmt.Fprintf(b, `  <rect x="%s" y="%s" width="%s" height="%s" rx="%s" fill="%s" stroke="%s"/>`,
 		svgutil.Num(n.X), svgutil.Num(n.Y), svgutil.Num(nw), svgutil.Num(rowH-8), svgutil.Num((rowH-8)/2), pal.NodeFill, pal.NodeStroke)
 	b.WriteByte('\n')
@@ -110,8 +110,8 @@ func writeNodes(b *strings.Builder, n *Node, o RenderOptions, pal theme.Palette)
 	}
 }
 
-func nodeWidth(n *Node, fontSize float64) float64 {
-	w := svgutil.TextWidth(n.Text, fontSize) + 20
+func nodeWidth(n *Node, face svgutil.Face, fontSize float64) float64 {
+	w := face.Width(n.Text, fontSize) + 20
 	if w < 50 {
 		w = 50
 	}

@@ -131,7 +131,7 @@ func svg(d *Diagram, o RenderOptions) []byte {
 		// Place the label to the right of the dot, but flip it left when it would
 		// run past the right margin.
 		lx, anchor := cx+9, "start"
-		if cx+9+svgutil.TextWidth(p.Label, o.FontSize) > w-pad {
+		if cx+9+svgutil.FaceFor(o.FontFace).Width(p.Label, o.FontSize) > w-pad {
 			lx, anchor = cx-9, "end"
 		}
 		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s" text-anchor="%s">%s</text>`,
