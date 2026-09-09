@@ -6,10 +6,10 @@
     <path d="M82.84,134 L82.84,166.86 L36.73,166.86 L36.73,199.72" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
     <rect x="45.89" y="152.86" width="27.78" height="18" fill="#ffffff"/>
     <text x="59.79" y="166.86" fill="#333333" text-anchor="middle" dy="-2">yes</text>
-    <path d="M114.07,134 L114.07,166.86 L147.94,166.86 L147.94,184" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <rect x="112.36" y="152.86" width="21.57" height="18" fill="#ffffff"/>
-    <text x="123.14" y="166.86" fill="#333333" text-anchor="middle" dy="-2">no</text>
-    <path d="M172.42,184 L172.42,166.86 L195.79,166.86 L195.79,113 L195.79,67 L158.72,67 L158.72,42" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M114.07,134 L114.07,159 L147.94,159 L147.94,184" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="120.22" y="145" width="21.57" height="18" fill="#ffffff"/>
+    <text x="131.01" y="159" fill="#333333" text-anchor="middle" dy="-2">no</text>
+    <path d="M172.42,184 L172.42,148.5 L195.79,148.5 L195.79,113 L195.79,77.5 L158.72,77.5 L158.72,42" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
     <rect x="112.34" y="0" width="69.57" height="42" fill="#ECECFF" stroke="#9370DB"/>
     <text fill="#333333" text-anchor="middle"><tspan x="147.13" y="25.9">Start</tspan></text>
     <polygon points="98.46,92 145.29,113 98.46,134 51.62,113" fill="#ECECFF" stroke="#9370DB"/>

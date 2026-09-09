@@ -25,6 +25,10 @@ type lgraph struct {
 	ups    map[*lnode][]*lnode // neighbors one rank up
 	downs  map[*lnode][]*lnode // neighbors one rank down
 	chains map[*domain.Edge][]*lnode
+
+	// cluster maps a node to the subgraph it belongs to, empty when it is
+	// outside every subgraph. Ordering keeps a cluster's members together.
+	cluster map[*lnode]string
 }
 
 // buildLGraph buckets nodes by rank and inserts dummies along edges that span
@@ -37,10 +41,23 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 		}
 	}
 	lg := &lgraph{
-		layers: make([][]*lnode, maxRank+1),
-		ups:    map[*lnode][]*lnode{},
-		downs:  map[*lnode][]*lnode{},
-		chains: map[*domain.Edge][]*lnode{},
+		layers:  make([][]*lnode, maxRank+1),
+		ups:     map[*lnode][]*lnode{},
+		downs:   map[*lnode][]*lnode{},
+		chains:  map[*domain.Edge][]*lnode{},
+		cluster: map[*lnode]string{},
+	}
+
+	// Which subgraph each node belongs to, by ID.
+	nodeCluster := map[string]string{}
+	for _, sg := range g.Subgraphs {
+		key := sg.ID
+		if key == "" {
+			key = sg.Title
+		}
+		for _, id := range sg.NodeIDs {
+			nodeCluster[id] = key
+		}
 	}
 
 	byID := make(map[string]*lnode, len(g.Nodes))
@@ -49,6 +66,9 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 		ln := &lnode{real: n, rank: r, w: n.Size.W, h: n.Size.H}
 		lg.layers[r] = append(lg.layers[r], ln)
 		byID[n.ID] = ln
+		if c := nodeCluster[n.ID]; c != "" {
+			lg.cluster[ln] = c
+		}
 	}
 
 	for _, e := range g.Edges {
@@ -59,8 +79,17 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 		chain := []*lnode{from}
 		if to.rank > from.rank+1 {
 			prev := from
+			// A dummy joins the cluster only when both ends share one, so a
+			// long edge crossing a subgraph does not drag the box open.
+			dummyCluster := ""
+			if c := nodeCluster[e.From]; c != "" && c == nodeCluster[e.To] {
+				dummyCluster = c
+			}
 			for r := from.rank + 1; r < to.rank; r++ {
 				d := &lnode{rank: r, w: 1}
+				if dummyCluster != "" {
+					lg.cluster[d] = dummyCluster
+				}
 				lg.layers[r] = append(lg.layers[r], d)
 				lg.link(prev, d)
 				chain = append(chain, d)
@@ -100,10 +129,12 @@ func reduceCrossings(lg *lgraph) {
 		if iter%2 == 0 {
 			for r := 1; r < len(lg.layers); r++ {
 				sortByMedian(lg.layers[r], lg.ups)
+				groupByCluster(lg.layers[r], lg.cluster)
 			}
 		} else {
 			for r := len(lg.layers) - 2; r >= 0; r-- {
 				sortByMedian(lg.layers[r], lg.downs)
+				groupByCluster(lg.layers[r], lg.cluster)
 			}
 		}
 		lg.renumber()
@@ -143,4 +174,58 @@ func medianOf(sorted []float64) float64 {
 		return sorted[n/2]
 	}
 	return (sorted[n/2-1] + sorted[n/2]) / 2
+}
+
+// groupByCluster reorders a layer so the members of one subgraph sit next to
+// each other, keeping their relative order. Each cluster is placed at the
+// average position of its members, so the pass does not undo the crossing
+// reduction it follows.
+//
+// Without it the ordering step is blind to subgraphs: members interleave with
+// outside nodes, and the boxes drawn around them overlap.
+func groupByCluster(layer []*lnode, cluster map[*lnode]string) {
+	if len(layer) < 2 {
+		return
+	}
+	type group struct {
+		members []*lnode
+		sum     float64
+	}
+	var groups []*group
+	byKey := map[string]*group{}
+	clustered := false
+	for i, ln := range layer {
+		key := cluster[ln]
+		if key == "" {
+			// An unclustered node keeps its own place.
+			groups = append(groups, &group{members: []*lnode{ln}, sum: float64(i)})
+			continue
+		}
+		clustered = true
+		gr, ok := byKey[key]
+		if !ok {
+			gr = &group{}
+			byKey[key] = gr
+			groups = append(groups, gr)
+		}
+		gr.members = append(gr.members, ln)
+		gr.sum += float64(i)
+	}
+	if !clustered {
+		return
+	}
+	sort.SliceStable(groups, func(i, j int) bool {
+		return groups[i].sum/float64(len(groups[i].members)) <
+			groups[j].sum/float64(len(groups[j].members))
+	})
+	at := 0
+	for _, gr := range groups {
+		for _, ln := range gr.members {
+			layer[at] = ln
+			at++
+		}
+	}
+	for i, ln := range layer {
+		ln.pos = i
+	}
 }

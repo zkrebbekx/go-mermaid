@@ -453,12 +453,14 @@ func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) {
 			e.Points = selfLoop(chain[0], g.Direction, totalPrimary)
 			continue
 		}
+		vertical := g.Direction == domain.TopBottom || g.Direction == domain.BottomTop
 		pts := make([]domain.Point, len(chain))
+		half := make([]float64, len(chain))
 		for i, ln := range chain {
 			pts[i] = ln.center(g.Direction, totalPrimary)
+			half[i] = primarySize(ln, vertical) / 2
 		}
-		vertical := g.Direction == domain.TopBottom || g.Direction == domain.BottomTop
-		pts = orthogonalize(pts, vertical)
+		pts = orthogonalize(pts, half, vertical)
 		from, to := chain[0], chain[len(chain)-1]
 		pts[0] = clipToBox(pts[0], domain.Size{W: from.w, H: from.h}, pts[1])
 		last := len(pts) - 1
@@ -476,30 +478,51 @@ func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) {
 }
 
 // orthogonalize converts a polyline of waypoint centers into a right-angle
-// (Manhattan) path. Between consecutive points it inserts an elbow at the
-// midpoint of the primary axis, so segments are either horizontal or vertical.
+// (Manhattan) path. Between consecutive points it inserts an elbow in the gap
+// between the two boxes, so segments are either horizontal or vertical.
 // Aligned points produce no elbow, keeping straight edges straight.
-func orthogonalize(pts []domain.Point, vertical bool) []domain.Point {
+//
+// half holds each waypoint's half-extent along the primary axis, and is zero
+// for a dummy. The elbow must sit in the gap, not at the midpoint of the two
+// centers: a node much taller than the rank gap puts that midpoint inside its
+// own box, and the edge then doubles back through the node it just left.
+func orthogonalize(pts []domain.Point, half []float64, vertical bool) []domain.Point {
 	if len(pts) < 2 {
 		return pts
 	}
 	out := []domain.Point{pts[0]}
 	for i := 1; i < len(pts); i++ {
-		a, b := out[len(out)-1], pts[i]
+		a, b := pts[i-1], pts[i]
+		ha, hb := half[i-1], half[i]
 		if vertical {
 			if a.X != b.X {
-				mid := (a.Y + b.Y) / 2
+				mid := gapMid(a.Y, ha, b.Y, hb)
 				out = append(out, domain.Point{X: a.X, Y: mid}, domain.Point{X: b.X, Y: mid})
 			}
 		} else {
 			if a.Y != b.Y {
-				mid := (a.X + b.X) / 2
+				mid := gapMid(a.X, ha, b.X, hb)
 				out = append(out, domain.Point{X: mid, Y: a.Y}, domain.Point{X: mid, Y: b.Y})
 			}
 		}
 		out = append(out, b)
 	}
 	return out
+}
+
+// gapMid returns the midpoint of the clear space between two boxes centered
+// at ca and cb with half-extents ha and hb along the same axis. When the
+// boxes overlap there is no gap, so it falls back to the midpoint of the
+// centers.
+func gapMid(ca, ha, cb, hb float64) float64 {
+	lo, hi := ca+ha, cb-hb
+	if cb < ca {
+		lo, hi = cb+hb, ca-ha
+	}
+	if hi < lo {
+		return (ca + cb) / 2
+	}
+	return (lo + hi) / 2
 }
 
 // selfLoop returns a small rectangular loop on the trailing side of a node.
