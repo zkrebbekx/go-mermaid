@@ -3,6 +3,8 @@ package render
 import (
 	"fmt"
 	"math"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/zkrebbekx/go-mermaid/internal/layout"
 	"github.com/zkrebbekx/go-mermaid/internal/lexer"
 	"github.com/zkrebbekx/go-mermaid/internal/parser"
+	"github.com/zkrebbekx/go-mermaid/internal/svgutil"
 )
 
 func laidOut(src string) *layout.Result {
@@ -191,6 +194,40 @@ func TestParallelEdgeLabelsSVG(t *testing.T) {
 			}
 			So(len(ys), ShouldEqual, 2)
 			So(ys[0], ShouldNotEqual, ys[1])
+		})
+	})
+}
+
+func TestSubgraphTitleFitsBox(t *testing.T) {
+	Convey("Given a subgraph whose title is wider than its member nodes", t, func() {
+		src := "flowchart TD\nsubgraph s [A Very Long Subgraph Title That Is Wide]\na --> b\nend"
+		out, err := SVG(laidOut(src), opts)
+		svg := string(out)
+
+		Convey("Then the whole title is inside the canvas", func() {
+			So(err, ShouldBeNil)
+			m := regexp.MustCompile(`viewBox="0 0 ([0-9.]+) `).FindStringSubmatch(svg)
+			So(m, ShouldNotBeNil)
+			width, convErr := strconv.ParseFloat(m[1], 64)
+			So(convErr, ShouldBeNil)
+			title := "A Very Long Subgraph Title That Is Wide"
+			So(svg, ShouldContainSubstring, title)
+			tm := regexp.MustCompile(`<text x="([-0-9.]+)"[^>]*>` + title).FindStringSubmatch(svg)
+			So(tm, ShouldNotBeNil)
+			x, convErr2 := strconv.ParseFloat(tm[1], 64)
+			So(convErr2, ShouldBeNil)
+			// The group is translated by the padding, so add it back.
+			So(x+opts.Padding, ShouldBeGreaterThanOrEqualTo, 0)
+			So(x+opts.Padding+svgutil.TextWidth(title, opts.FontSize), ShouldBeLessThanOrEqualTo, width)
+		})
+	})
+
+	Convey("Given a subgraph whose title is narrower than its member nodes", t, func() {
+		wide, err := SVG(laidOut("flowchart TD\nsubgraph s [S]\na[A very wide node label] --> b\nend"), opts)
+
+		Convey("Then the box is still sized by the nodes", func() {
+			So(err, ShouldBeNil)
+			So(string(wide), ShouldContainSubstring, "A very wide node label")
 		})
 	})
 }

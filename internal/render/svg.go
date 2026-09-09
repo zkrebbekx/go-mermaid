@@ -177,8 +177,21 @@ func subgraphBox(sg *domain.Subgraph, g *domain.Graph, opts Options) (x, y, w, h
 	if sg.Title != "" {
 		titleH = opts.FontSize + 6
 	}
-	return minX - pad, minY - pad - titleH, maxX - minX + 2*pad, maxY - minY + 2*pad + titleH, true
+	x, y = minX-pad, minY-pad-titleH
+	w, h = maxX-minX+2*pad, maxY-minY+2*pad+titleH
+	// The title is drawn inside the box at x+titleInset. Widen the box to fit
+	// it, or a title longer than the member nodes overflows the cluster and
+	// then the canvas.
+	if sg.Title != "" {
+		if tw := svgutil.TextWidth(sg.Title, opts.FontSize) + titleInset*2; tw > w {
+			w = tw
+		}
+	}
+	return x, y, w, h, true
 }
+
+// titleInset is the gap between a subgraph box edge and its title text.
+const titleInset = 6.0
 
 // writeSubgraph draws a dashed cluster box around a subgraph's member nodes.
 func writeSubgraph(b *strings.Builder, sg *domain.Subgraph, g *domain.Graph, pal theme.Palette, opts Options) {
@@ -191,7 +204,7 @@ func writeSubgraph(b *strings.Builder, sg *domain.Subgraph, g *domain.Graph, pal
 	b.WriteByte('\n')
 	if sg.Title != "" {
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s">%s</text>`,
-			num(x+6), num(y+opts.FontSize), pal.Text, esc(sg.Title))
+			num(x+titleInset), num(y+opts.FontSize), pal.Text, esc(sg.Title))
 		b.WriteByte('\n')
 	}
 }

@@ -52,7 +52,7 @@ func svg(lay *Layout, o RenderOptions) []byte {
 			svgutil.Num(w/2), svgutil.Num(pad+o.FontSize), pal.Text, svgutil.Esc(o.Title))
 		b.WriteByte('\n')
 	}
-	fmt.Fprintf(&b, `  <g transform="translate(%s,%s)">`, svgutil.Num(pad), svgutil.Num(pad+titleH))
+	fmt.Fprintf(&b, `  <g transform="translate(%s,%s)">`, svgutil.Num(pad+lay.OffsetX), svgutil.Num(pad+titleH))
 	b.WriteByte('\n')
 
 	for _, p := range lay.Diagram.Participants {
@@ -109,10 +109,7 @@ func writeMessage(b *strings.Builder, m *Message, lay *Layout, pal theme.Palette
 		marker = ` marker-end="url(#seq-arrow)"`
 	}
 
-	label := m.Text
-	if m.Num > 0 {
-		label = fmt.Sprintf("%d. %s", m.Num, m.Text)
-	}
+	label := MessageLabel(m)
 
 	if m.From == m.To {
 		// Self-message: a small loop to the right of the lifeline.
@@ -125,7 +122,7 @@ func writeMessage(b *strings.Builder, m *Message, lay *Layout, pal theme.Palette
 			svgutil.Num(x), svgutil.Num(y+12))
 		fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s"%s%s/>`, path, pal.Edge, dash, marker)
 		b.WriteByte('\n')
-		writeMsgText(b, label, x+selfLoopW+6, y+6, pal, "start")
+		writeMsgText(b, label, x+selfLoopW+selfLabelGap, y+6, pal, "start")
 		return
 	}
 
@@ -154,21 +151,11 @@ func writeFrame(b *strings.Builder, f *Frame, lay *Layout, pal theme.Palette, o 
 	if f.EndRow < f.StartRow {
 		return
 	}
-	ps := lay.Diagram.Participants
-	if len(ps) == 0 {
+	if len(lay.Diagram.Participants) == 0 {
 		return
 	}
-	minX := ps[0].X - ps[0].Width/2
-	maxX := ps[0].X + ps[0].Width/2
-	for _, p := range ps {
-		if l := p.X - p.Width/2; l < minX {
-			minX = l
-		}
-		if r := p.X + p.Width/2; r > maxX {
-			maxX = r
-		}
-	}
-	x, w := minX-10, (maxX-minX)+20
+	minX, maxX := participantSpan(lay.Diagram)
+	x, w := minX-frameInset, (maxX-minX)+frameInset*2
 	top := rowY(lay, f.StartRow) - 16
 	bot := rowY(lay, f.EndRow) + 14
 
