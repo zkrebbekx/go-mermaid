@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.5](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.4...v0.1.5) (2026-09-09)
+
+
+### Features
+
+* **parser:** close the common Mermaid syntax gaps ([#37](https://github.com/zkrebbekx/go-mermaid/issues/37)) ([a341f30](https://github.com/zkrebbekx/go-mermaid/commit/a341f300319691c7176f30a71c20ef0c296c4a36))
+* **state:** keep nested machines, notes and pseudostates ([#34](https://github.com/zkrebbekx/go-mermaid/issues/34)) ([0f691fe](https://github.com/zkrebbekx/go-mermaid/commit/0f691fea3a824527ff647a9ebef10b2653d11570))
+* **svgutil:** measure text with the font the SVG asks for ([#32](https://github.com/zkrebbekx/go-mermaid/issues/32)) ([1ce9264](https://github.com/zkrebbekx/go-mermaid/commit/1ce926414e23ccf95d3866293678db62093ff49f))
+
+
+### Bug Fixes
+
+* **class,er,requirement:** draw the content the parsers already read ([#35](https://github.com/zkrebbekx/go-mermaid/issues/35)) ([34fde31](https://github.com/zkrebbekx/go-mermaid/commit/34fde311a7d6ae9d60f33dd21d84a02174ede74a))
+* **layout:** route elbows through the gap and keep subgraphs together ([#39](https://github.com/zkrebbekx/go-mermaid/issues/39)) ([e0e21db](https://github.com/zkrebbekx/go-mermaid/commit/e0e21db5f089f920173146cde5bc2a80a9c06fa2))
+* **render:** keep notes, frames and wide titles on the canvas ([#31](https://github.com/zkrebbekx/go-mermaid/issues/31)) ([181b031](https://github.com/zkrebbekx/go-mermaid/commit/181b0314e33b7efcee41dcbefbbc771b48e9141e))
+* stop inventing content from unrecognized syntax ([#36](https://github.com/zkrebbekx/go-mermaid/issues/36)) ([5858046](https://github.com/zkrebbekx/go-mermaid/commit/58580465315df3dc29209bf3e9b56cd3a76efce3))
+
 ## [0.1.4](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.3...v0.1.4) (2026-09-08)
 
 
