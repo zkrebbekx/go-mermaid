@@ -63,7 +63,8 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 		}
 	}
 	contentW := maxX - minX
-	if tw := svgutil.TextWidth(opts.Title, opts.FontSize); tw > contentW {
+	face := svgutil.FaceFor(opts.FontFace)
+	if tw := face.Width(opts.Title, opts.FontSize); tw > contentW {
 		contentW = tw
 	}
 	shiftX, shiftY := -minX, -minY
@@ -91,7 +92,7 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 		writeSubgraph(&b, sg, res.Graph, pal, opts)
 	}
 	for _, e := range res.Graph.Edges {
-		writeEdge(&b, e, pal, opts.Curved, opts.FontSize)
+		writeEdge(&b, e, pal, opts.Curved, face, opts.FontSize)
 	}
 	for _, n := range res.Graph.Nodes {
 		writeNode(&b, n, pal, opts)
@@ -101,7 +102,7 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
-func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved bool, fontSize float64) {
+func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved bool, face svgutil.Face, fontSize float64) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -135,15 +136,27 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved boo
 
 	if e.Label != "" {
 		// Layout anchors the label on the routed path and staggers labels
-		// of parallel edges so they never paint over each other.
+		// of parallel edges so they never paint over each other. LabelPos is
+		// the baseline of the last line, so a multi-line label grows upward.
 		midX, midY := e.LabelPos.X, e.LabelPos.Y
-		tw := svgutil.TextWidth(e.Label, fontSize) + 6
+		lines := svgutil.SplitLines(e.Label)
+		tw := 0.0
+		for _, ln := range lines {
+			if lw := face.Width(ln, fontSize); lw > tw {
+				tw = lw
+			}
+		}
+		tw += 6
+		th := fontSize * float64(len(lines))
 		fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>`,
-			num(midX-tw/2), num(midY-fontSize), num(tw), num(fontSize+4), pal.Background)
+			num(midX-tw/2), num(midY-th), num(tw), num(th+4), pal.Background)
 		b.WriteByte('\n')
-		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
-			num(midX), num(midY), pal.Text, esc(e.Label))
-		b.WriteByte('\n')
+		for i, ln := range lines {
+			y := midY - fontSize*float64(len(lines)-1-i)
+			fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
+				num(midX), num(y), pal.Text, esc(ln))
+			b.WriteByte('\n')
+		}
 	}
 }
 
@@ -183,7 +196,7 @@ func subgraphBox(sg *domain.Subgraph, g *domain.Graph, opts Options) (x, y, w, h
 	// it, or a title longer than the member nodes overflows the cluster and
 	// then the canvas.
 	if sg.Title != "" {
-		if tw := svgutil.TextWidth(sg.Title, opts.FontSize) + titleInset*2; tw > w {
+		if tw := svgutil.FaceFor(opts.FontFace).Width(sg.Title, opts.FontSize) + titleInset*2; tw > w {
 			w = tw
 		}
 	}

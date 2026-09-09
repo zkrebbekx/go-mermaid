@@ -18,7 +18,13 @@ type Options struct {
 	NodeSep  float64 // gap between nodes within a layer
 	RankSep  float64 // gap between layers
 	FontSize float64 // used to estimate node sizes
+	FontFace string  // CSS font-family the SVG will ask for; picks the metrics
 }
+
+// face returns the metric table that matches the font family the renderer
+// will name in the SVG. Measuring with a different face than the viewer
+// draws with makes every box the wrong size.
+func (o Options) face() svgutil.Face { return svgutil.FaceFor(o.FontFace) }
 
 // Result is a laid-out graph plus its overall bounds.
 type Result struct {
@@ -133,20 +139,28 @@ func separateParallel(g *domain.Graph) {
 }
 
 // labelSize estimates the box a renderer draws around an edge label.
-func labelSize(label string, fontSize float64) domain.Size {
-	return domain.Size{W: svgutil.TextWidth(label, fontSize) + 6, H: fontSize + 4}
+func labelSize(label string, face svgutil.Face, fontSize float64) domain.Size {
+	lines := svgutil.SplitLines(label)
+	w := 0.0
+	for _, ln := range lines {
+		if lw := face.Width(ln, fontSize); lw > w {
+			w = lw
+		}
+	}
+	return domain.Size{W: w + 6, H: fontSize*float64(len(lines)) + 4}
 }
 
 // labelRect returns the estimated box of e's label around LabelPos. The box
 // matches the background rect the flowchart renderer draws: the text
 // baseline sits near the bottom, so most of the box is above LabelPos.
-func labelRect(e *domain.Edge, fontSize float64) (domain.Rect, bool) {
+func labelRect(e *domain.Edge, face svgutil.Face, fontSize float64) (domain.Rect, bool) {
 	if e.Label == "" || len(e.Points) == 0 {
 		return domain.Rect{}, false
 	}
-	sz := labelSize(e.Label, fontSize)
+	sz := labelSize(e.Label, face, fontSize)
+	// LabelPos is the baseline of the last line, so the box grows upward.
 	return domain.Rect{
-		Min:  domain.Point{X: e.LabelPos.X - sz.W/2, Y: e.LabelPos.Y - fontSize},
+		Min:  domain.Point{X: e.LabelPos.X - sz.W/2, Y: e.LabelPos.Y - (sz.H - 4)},
 		Size: sz,
 	}, true
 }
@@ -167,10 +181,10 @@ func placeLabels(g *domain.Graph, vertical bool, opts Options) {
 				labeled = append(labeled, e)
 			}
 		}
-		if len(labeled) < 2 || !labelsCollide(labeled, vertical, opts.FontSize) {
+		if len(labeled) < 2 || !labelsCollide(labeled, vertical, opts.face(), opts.FontSize) {
 			continue
 		}
-		staggerLabels(labeled, vertical, opts.FontSize)
+		staggerLabels(labeled, vertical, opts.face(), opts.FontSize)
 	}
 }
 
@@ -178,10 +192,10 @@ func placeLabels(g *domain.Graph, vertical bool, opts Options) {
 // overlap when both sit at the same distance along their edges. Only the
 // label extent across the edges matters: width for vertical edges, height for
 // horizontal ones.
-func labelsCollide(es []*domain.Edge, vertical bool, fontSize float64) bool {
+func labelsCollide(es []*domain.Edge, vertical bool, face svgutil.Face, fontSize float64) bool {
 	const gap = 4.0
 	extent := func(e *domain.Edge) float64 {
-		sz := labelSize(e.Label, fontSize)
+		sz := labelSize(e.Label, face, fontSize)
 		if vertical {
 			return sz.W
 		}
@@ -201,9 +215,14 @@ func labelsCollide(es []*domain.Edge, vertical bool, fontSize float64) bool {
 // the path midpoint and at least one label height apart. On vertical edges
 // the anchor is nudged down so the label box, which extends mostly above
 // the anchor, is centered in its slot.
-func staggerLabels(es []*domain.Edge, vertical bool, fontSize float64) {
+func staggerLabels(es []*domain.Edge, vertical bool, face svgutil.Face, fontSize float64) {
 	const gap = 4.0
 	boxH := fontSize + 4
+	for _, e := range es {
+		if h := labelSize(e.Label, face, fontSize).H; h > boxH {
+			boxH = h
+		}
+	}
 	n := float64(len(es))
 	for i, e := range es {
 		length := domain.PolylineLength(e.Points)
@@ -233,7 +252,7 @@ func normalizeOrigin(g *domain.Graph, opts Options) {
 		for _, p := range e.Points {
 			minX, minY = math.Min(minX, p.X), math.Min(minY, p.Y)
 		}
-		if r, ok := labelRect(e, opts.FontSize); ok {
+		if r, ok := labelRect(e, opts.face(), opts.FontSize); ok {
 			minX, minY = math.Min(minX, r.Min.X), math.Min(minY, r.Min.Y)
 		}
 	}
@@ -361,6 +380,7 @@ func spreadPorts(g *domain.Graph, vertical bool) {
 // own renderer) are left untouched.
 func sizeNodes(g *domain.Graph, opts Options) {
 	const padX, padY = 20.0, 14.0
+	face := opts.face()
 	for _, n := range g.Nodes {
 		if n.Size.W != 0 || n.Size.H != 0 {
 			continue
@@ -372,7 +392,7 @@ func sizeNodes(g *domain.Graph, opts Options) {
 		lines := svgutil.SplitLines(label)
 		maxW := 0.0
 		for _, ln := range lines {
-			if wd := svgutil.TextWidth(ln, opts.FontSize); wd > maxW {
+			if wd := face.Width(ln, opts.FontSize); wd > maxW {
 				maxW = wd
 			}
 		}
@@ -527,7 +547,7 @@ func bounds(g *domain.Graph, opts Options) (width, height float64) {
 			width = math.Max(width, p.X)
 			height = math.Max(height, p.Y)
 		}
-		if r, ok := labelRect(e, opts.FontSize); ok {
+		if r, ok := labelRect(e, opts.face(), opts.FontSize); ok {
 			width = math.Max(width, r.Min.X+r.Size.W)
 			height = math.Max(height, r.Min.Y+r.Size.H)
 		}

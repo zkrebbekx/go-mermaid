@@ -98,6 +98,7 @@ func (c config) layout() layout.Options {
 		NodeSep:  c.nodeSep,
 		RankSep:  c.rankSep,
 		FontSize: c.fontSize,
+		FontFace: c.fontFace,
 	}
 }
 

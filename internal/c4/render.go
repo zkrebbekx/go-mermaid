@@ -44,13 +44,13 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 	g := &domain.Graph{Direction: domain.TopBottom}
 	for _, e := range d.Elements {
 		n := &domain.Node{ID: e.ID, Label: e.Label, Shape: domain.ShapeRect}
-		n.Size = elementSize(e, o.FontSize)
+		n.Size = elementSize(e, svgutil.FaceFor(o.FontFace), o.FontSize)
 		g.Nodes = append(g.Nodes, n)
 	}
 	for _, r := range d.Rels {
 		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: r.Label})
 	}
-	res, err := layout.Compute(g, layout.Options{NodeSep: 60, RankSep: 100, FontSize: o.FontSize})
+	res, err := layout.Compute(g, layout.Options{NodeSep: 60, RankSep: 100, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
 		return nil, err
 	}
@@ -142,10 +142,10 @@ func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette) {
 	}
 }
 
-func elementSize(e *Element, fontSize float64) domain.Size {
-	maxW := svgutil.TextWidth(e.Label, fontSize)
+func elementSize(e *Element, face svgutil.Face, fontSize float64) domain.Size {
+	maxW := face.Width(e.Label, fontSize)
 	if l := len([]rune(e.Descr)); l < 28 {
-		if wd := svgutil.TextWidth(e.Descr, fontSize); wd > maxW {
+		if wd := face.Width(e.Descr, fontSize); wd > maxW {
 			maxW = wd
 		}
 	}

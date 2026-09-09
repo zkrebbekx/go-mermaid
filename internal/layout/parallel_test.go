@@ -69,8 +69,8 @@ func TestParallelEdgeLabels(t *testing.T) {
 
 			Convey("Then the label boxes do not overlap", func() {
 				So(err, ShouldBeNil)
-				r0, ok0 := labelRect(g.Edges[0], opts.FontSize)
-				r1, ok1 := labelRect(g.Edges[1], opts.FontSize)
+				r0, ok0 := labelRect(g.Edges[0], opts.face(), opts.FontSize)
+				r1, ok1 := labelRect(g.Edges[1], opts.face(), opts.FontSize)
 				So(ok0, ShouldBeTrue)
 				So(ok1, ShouldBeTrue)
 				So(overlaps(r0, r1), ShouldBeFalse)
@@ -89,7 +89,7 @@ func TestParallelEdgeLabels(t *testing.T) {
 			Convey("Then nothing is placed at a negative coordinate and the bounds cover the labels", func() {
 				So(err, ShouldBeNil)
 				for _, e := range g.Edges {
-					r, _ := labelRect(e, opts.FontSize)
+					r, _ := labelRect(e, opts.face(), opts.FontSize)
 					So(r.Min.X, ShouldBeGreaterThanOrEqualTo, 0)
 					So(r.Min.Y, ShouldBeGreaterThanOrEqualTo, 0)
 					So(r.Min.X+r.Size.W, ShouldBeLessThanOrEqualTo, res.Width)
@@ -110,8 +110,8 @@ func TestParallelEdgeLabels(t *testing.T) {
 
 			Convey("Then the labels already clear each other and stay side by side at the midpoint", func() {
 				So(err, ShouldBeNil)
-				r0, _ := labelRect(g.Edges[0], opts.FontSize)
-				r1, _ := labelRect(g.Edges[1], opts.FontSize)
+				r0, _ := labelRect(g.Edges[0], opts.face(), opts.FontSize)
+				r1, _ := labelRect(g.Edges[1], opts.face(), opts.FontSize)
 				So(overlaps(r0, r1), ShouldBeFalse)
 				for _, e := range g.Edges {
 					mid := domain.PolylineMidpoint(e.Points)
@@ -131,8 +131,8 @@ func TestParallelEdgeLabels(t *testing.T) {
 				So(err, ShouldBeNil)
 				for i := range g.Edges {
 					for j := i + 1; j < len(g.Edges); j++ {
-						ri, _ := labelRect(g.Edges[i], opts.FontSize)
-						rj, _ := labelRect(g.Edges[j], opts.FontSize)
+						ri, _ := labelRect(g.Edges[i], opts.face(), opts.FontSize)
+						rj, _ := labelRect(g.Edges[j], opts.face(), opts.FontSize)
 						So(overlaps(ri, rj), ShouldBeFalse)
 					}
 				}
@@ -150,6 +150,44 @@ func TestParallelEdgeLabels(t *testing.T) {
 				So(err, ShouldBeNil)
 				e := g.Edges[0]
 				So(e.LabelPos, ShouldResemble, domain.PolylineMidpoint(e.Points))
+			})
+		})
+	})
+}
+
+func TestEdgeLabelLineBreaks(t *testing.T) {
+	Convey("Given an edge label containing a line break", t, func() {
+		g := graphFrom("flowchart TD\nA -->|line one<br/>line two| B")
+
+		Convey("When computing the layout", func() {
+			_, err := Compute(g, opts)
+
+			Convey("Then the label box is sized for two lines, not one long one", func() {
+				So(err, ShouldBeNil)
+				sz := labelSize(g.Edges[0].Label, opts.face(), opts.FontSize)
+				So(sz.H, ShouldAlmostEqual, opts.FontSize*2+4, 0.01)
+				oneLine := labelSize("line one", opts.face(), opts.FontSize)
+				So(sz.W, ShouldAlmostEqual, oneLine.W, 0.01)
+			})
+		})
+	})
+}
+
+func TestFontFaceReachesMeasurement(t *testing.T) {
+	Convey("Given the same node label under two font families", t, func() {
+		narrow := graphFrom("flowchart TD\nA[iiiiiiiiii] --> B")
+		wide := graphFrom("flowchart TD\nA[iiiiiiiiii] --> B")
+
+		Convey("When laying out with sans and with monospace", func() {
+			sansOpts := Options{NodeSep: 50, RankSep: 50, FontSize: 14, FontFace: "sans-serif"}
+			monoOpts := Options{NodeSep: 50, RankSep: 50, FontSize: 14, FontFace: "monospace"}
+			_, err1 := Compute(narrow, sansOpts)
+			_, err2 := Compute(wide, monoOpts)
+
+			Convey("Then the monospace box is wider, because the metrics differ", func() {
+				So(err1, ShouldBeNil)
+				So(err2, ShouldBeNil)
+				So(wide.NodeByID("A").Size.W, ShouldBeGreaterThan, narrow.NodeByID("A").Size.W)
 			})
 		})
 	})

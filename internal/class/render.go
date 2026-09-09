@@ -35,14 +35,14 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 	g := &domain.Graph{Direction: domain.TopBottom}
 	for _, c := range d.Classes {
 		n := &domain.Node{ID: c.Name, Label: c.Name, Shape: domain.ShapeRect}
-		n.Size = classSize(c, o.FontSize)
+		n.Size = classSize(c, svgutil.FaceFor(o.FontFace), o.FontSize)
 		g.Nodes = append(g.Nodes, n)
 	}
 	for _, r := range d.Relations {
 		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: r.Label})
 	}
 
-	res, err := layout.Compute(g, layout.Options{NodeSep: 50, RankSep: 90, FontSize: o.FontSize})
+	res, err := layout.Compute(g, layout.Options{NodeSep: 50, RankSep: 90, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
 		return nil, err
 	}
@@ -202,10 +202,10 @@ func unit(a, b domain.Point) (float64, float64) {
 }
 
 // classSize computes a box size that fits the name and all members.
-func classSize(c *Class, fontSize float64) domain.Size {
-	maxW := svgutil.TextWidth(c.Name, fontSize)
+func classSize(c *Class, face svgutil.Face, fontSize float64) domain.Size {
+	maxW := face.Width(c.Name, fontSize)
 	for _, m := range append(append([]string{}, c.Attributes...), c.Methods...) {
-		if wd := svgutil.TextWidth(m, fontSize); wd > maxW {
+		if wd := face.Width(m, fontSize); wd > maxW {
 			maxW = wd
 		}
 	}

@@ -23,13 +23,13 @@ func TestCanvasCoversOverhang(t *testing.T) {
 			Convey("Then the drawing is shifted right so the note stays on the canvas", func() {
 				So(lay.OffsetX, ShouldBeGreaterThan, 0)
 				n := lay.Diagram.Notes[0]
-				x, _ := noteBox(lay.Diagram, n, 14)
+				x, _ := noteBox(lay.Diagram, n, svgutil.FaceSans, 14)
 				So(x+lay.OffsetX, ShouldBeGreaterThanOrEqualTo, 0)
 			})
 
 			Convey("Then the width covers the whole note", func() {
 				n := lay.Diagram.Notes[0]
-				x, w := noteBox(lay.Diagram, n, 14)
+				x, w := noteBox(lay.Diagram, n, svgutil.FaceSans, 14)
 				So(x+w+lay.OffsetX, ShouldBeLessThanOrEqualTo, lay.Width)
 			})
 		})
@@ -41,7 +41,7 @@ func TestCanvasCoversOverhang(t *testing.T) {
 		Convey("When computing the layout", func() {
 			Convey("Then the width still covers it", func() {
 				n := lay.Diagram.Notes[0]
-				x, w := noteBox(lay.Diagram, n, 14)
+				x, w := noteBox(lay.Diagram, n, svgutil.FaceSans, 14)
 				So(x+w+lay.OffsetX, ShouldBeLessThanOrEqualTo, lay.Width)
 			})
 		})

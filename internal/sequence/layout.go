@@ -10,7 +10,11 @@ import (
 type Options struct {
 	FontSize float64
 	Padding  float64
+	FontFace string // CSS font-family the SVG will ask for; picks the metrics
 }
+
+// face returns the metric table matching the font family the renderer names.
+func (o Options) face() svgutil.Face { return svgutil.FaceFor(o.FontFace) }
 
 // Layout holds computed geometry for rendering.
 type Layout struct {
@@ -41,10 +45,11 @@ const (
 
 // Compute assigns positions to participants and messages.
 func Compute(d *Diagram, opts Options) *Layout {
+	face := opts.face()
 	// Participant header widths and X centers, left to right.
 	var x float64
 	for _, p := range d.Participants {
-		w := svgutil.TextWidth(p.Label, opts.FontSize) + headerPadX*2
+		w := face.Width(p.Label, opts.FontSize) + headerPadX*2
 		if w < 60 {
 			w = 60
 		}
@@ -80,7 +85,7 @@ func Compute(d *Diagram, opts Options) *Layout {
 	// draws its label to the right of the loop; a normal message centers it
 	// between the two lifelines.
 	for _, m := range d.Messages {
-		lw := svgutil.TextWidth(MessageLabel(m), opts.FontSize)
+		lw := face.Width(MessageLabel(m), opts.FontSize)
 		if m.From == m.To {
 			if p := d.participant(m.From); p != nil {
 				bd.Add(p.X+selfLoopW+selfLabelGap+lw, 0)
@@ -97,7 +102,7 @@ func Compute(d *Diagram, opts Options) *Layout {
 	}
 	// A note can sit left of the first lifeline or right of the last.
 	for _, n := range d.Notes {
-		nx, nw := noteBox(d, n, opts.FontSize)
+		nx, nw := noteBox(d, n, face, opts.FontSize)
 		bd.Add(nx, 0)
 		bd.Add(nx+nw, 0)
 	}
@@ -146,8 +151,8 @@ func rowY(lay *Layout, row int) float64 {
 }
 
 // noteWidth estimates a note box width from its text.
-func noteWidth(text string, fontSize float64) float64 {
-	w := svgutil.TextWidth(text, fontSize) + 20
+func noteWidth(text string, face svgutil.Face, fontSize float64) float64 {
+	w := face.Width(text, fontSize) + 20
 	if w < 60 {
 		w = 60
 	}
@@ -155,8 +160,8 @@ func noteWidth(text string, fontSize float64) float64 {
 }
 
 // noteBox returns the left x and width of a note's box.
-func noteBox(d *Diagram, n *Note, fontSize float64) (x, w float64) {
-	w = noteWidth(n.Text, fontSize)
+func noteBox(d *Diagram, n *Note, face svgutil.Face, fontSize float64) (x, w float64) {
+	w = noteWidth(n.Text, face, fontSize)
 	switch n.Pos {
 	case NoteRight:
 		if p := d.participant(n.Of[0]); p != nil {
