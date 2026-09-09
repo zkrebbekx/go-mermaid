@@ -42,7 +42,12 @@ func svg(d *Diagram, o RenderOptions) []byte {
 	pad := o.Padding
 	titleH := svgutil.TitleHeight(o.Title, o.FontSize)
 
-	left := pad + axisPad
+	// The y-axis title is drawn rotated in the left margin, so widen it.
+	yTitleW := 0.0
+	if d.YLabel != "" {
+		yTitleW = o.FontSize + 6
+	}
+	left := pad + axisPad + yTitleW
 	top := pad + titleH
 	bottom := top + plotH
 	right := left + plotW
@@ -78,6 +83,15 @@ func svg(d *Diagram, o RenderOptions) []byte {
 	if o.Title != "" {
 		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s" text-anchor="middle" font-weight="bold">%s</text>`,
 			svgutil.Num(w/2), svgutil.Num(pad+o.FontSize), pal.Text, svgutil.Esc(o.Title))
+		b.WriteByte('\n')
+	}
+
+	// The y-axis title, read by the parser and previously never drawn.
+	if d.YLabel != "" {
+		cx, cy := pad+o.FontSize, (top+bottom)/2
+		fmt.Fprintf(&b, `  <text x="%s" y="%s" fill="%s" text-anchor="middle" transform="rotate(-90 %s %s)">%s</text>`,
+			svgutil.Num(cx), svgutil.Num(cy), pal.Text,
+			svgutil.Num(cx), svgutil.Num(cy), svgutil.Esc(d.YLabel))
 		b.WriteByte('\n')
 	}
 

@@ -85,7 +85,9 @@ func Parse(src string) (*Diagram, error) {
 			lastOrder[current] = order
 			order++
 		case "branch":
-			name := strings.TrimSpace(line[len("branch"):])
+			// `branch dev order: 2` names the branch "dev"; the order operand
+			// is a layout hint, not part of the name.
+			name := firstWord(strings.TrimSpace(line[len("branch"):]))
 			if name != "" && d.lane(name) < 0 {
 				d.Branches = append(d.Branches, &Branch{Name: name, Lane: len(d.Branches)})
 				current = name
@@ -108,6 +110,7 @@ func Parse(src string) (*Diagram, error) {
 			order++
 		case "cherry-pick":
 			c := &Commit{Order: order, Branch: current}
+			c.ID, c.Tag = commitMeta(line)
 			d.Commits = append(d.Commits, c)
 			lastOrder[current] = order
 			order++

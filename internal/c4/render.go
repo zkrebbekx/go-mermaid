@@ -81,7 +81,7 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 	b.WriteByte('\n')
 
 	for i, r := range d.Rels {
-		writeRel(&b, r, g.Edges[i], pal)
+		writeRel(&b, r, g.Edges[i], pal, o)
 	}
 	for _, e := range d.Elements {
 		writeElement(&b, e, g.NodeByID(e.ID), o)
@@ -119,7 +119,7 @@ func writeElement(b *strings.Builder, e *Element, n *domain.Node, o RenderOption
 	}
 }
 
-func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette) {
+func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette, o RenderOptions) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -134,6 +134,13 @@ func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette) {
 	fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>`,
 		strings.TrimSpace(d.String()), pal.Edge)
 	b.WriteByte('\n')
+	if r.Tech != "" {
+		mid := e.LabelPos
+		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" font-size="%s">%s</text>`,
+			svgutil.Num(mid.X), svgutil.Num(mid.Y+o.FontSize), pal.Text,
+			svgutil.Num(o.FontSize-2), svgutil.Esc("["+r.Tech+"]"))
+		b.WriteByte('\n')
+	}
 	if r.Label != "" {
 		mid := e.LabelPos
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,

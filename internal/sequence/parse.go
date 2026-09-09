@@ -1,6 +1,7 @@
 package sequence
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/zkrebbekx/go-mermaid/internal/syntax"
@@ -28,17 +29,25 @@ var frameKeywords = map[string]bool{
 	"rect": true, "critical": true, "break": true,
 }
 
-// blockKeywords are recognized but not drawn (skipped) keywords.
+// blockKeywords open a block that is not drawn but is still closed by `end`.
 var blockKeywords = map[string]bool{
 	"box": true,
+}
+
+// openBlock is an entry on the block stack. A frame is drawn; a box is not,
+// but both are closed by `end`, so both must be tracked or the `end` that
+// closes a box would close an enclosing frame instead.
+type openBlock struct {
+	frame *Frame // nil for a box
 }
 
 type parser struct {
 	d       *Diagram
 	act     map[string][]int // activation start-row stack per participant
-	frames  []*Frame         // open frame stack
+	open    []openBlock      // stack of open frames and boxes
 	autonum bool             // autonumber active
-	msgNum  int              // running autonumber counter
+	msgNum  int              // next autonumber value
+	numStep int              // autonumber increment
 }
 
 // Parse builds a Diagram from sequence diagram source.
@@ -72,27 +81,37 @@ func Parse(src string) (*Diagram, error) {
 				return nil, err
 			}
 		case kw == "autonumber":
-			p.autonum = true
+			p.parseAutonumber(strings.TrimSpace(line[len("autonumber"):]))
 		case kw == "activate":
 			p.activate(strings.TrimSpace(line[len("activate"):]), p.d.rows)
 		case kw == "deactivate":
 			p.deactivate(strings.TrimSpace(line[len("deactivate"):]), p.d.rows)
 		case frameKeywords[kw]:
-			f := &Frame{Type: kw, Label: strings.TrimSpace(line[len(kw):]), StartRow: p.d.rows}
+			operand := strings.TrimSpace(line[len(kw):])
+			f := &Frame{Type: kw, StartRow: p.d.rows}
+			// `rect rgb(0,0,255)` gives a background colour, not a label.
+			// Without this the colour was drawn as the frame's text.
+			if kw == "rect" && isColor(operand) {
+				f.Color = operand
+			} else {
+				f.Label = operand
+			}
 			p.d.Frames = append(p.d.Frames, f)
-			p.frames = append(p.frames, f)
+			p.open = append(p.open, openBlock{frame: f})
 		case kw == "else" || kw == "and":
-			if n := len(p.frames); n > 0 {
-				top := p.frames[n-1]
+			if top := p.topFrame(); top != nil {
 				top.Sections = append(top.Sections, &Section{Row: p.d.rows, Label: strings.TrimSpace(line[len(kw):])})
 			}
 		case kw == "end":
-			if n := len(p.frames); n > 0 {
-				top := p.frames[n-1]
-				top.EndRow = p.d.rows - 1
-				p.frames = p.frames[:n-1]
+			if n := len(p.open); n > 0 {
+				top := p.open[n-1]
+				p.open = p.open[:n-1]
+				if top.frame != nil {
+					top.frame.EndRow = p.d.rows - 1
+				}
 			}
 		case blockKeywords[kw]:
+			p.open = append(p.open, openBlock{})
 			continue
 		default:
 			if err := p.parseMessage(line, lineNo); err != nil {
@@ -161,8 +180,8 @@ func (p *parser) parseMessage(line string, lineNo int) error {
 	row := p.nextRow()
 	num := 0
 	if p.autonum {
-		p.msgNum++
 		num = p.msgNum
+		p.msgNum += p.numStep
 	}
 	p.d.Messages = append(p.d.Messages, &Message{From: from, To: to, Text: text, Arrow: arrow, Row: row, Num: num})
 	if activateTarget {
@@ -269,4 +288,44 @@ func stripComment(s string) string {
 		return s[:i]
 	}
 	return s
+}
+
+// topFrame returns the innermost open frame, skipping boxes, or nil.
+func (p *parser) topFrame() *Frame {
+	for i := len(p.open) - 1; i >= 0; i-- {
+		if p.open[i].frame != nil {
+			return p.open[i].frame
+		}
+	}
+	return nil
+}
+
+// parseAutonumber reads the optional start and step operands. `autonumber`
+// alone numbers from 1 in steps of 1; `autonumber 10 10` starts at 10 and
+// steps by 10. Both operands were previously discarded.
+func (p *parser) parseAutonumber(operand string) {
+	p.autonum = true
+	p.msgNum = 1
+	p.numStep = 1
+	fields := strings.Fields(operand)
+	if len(fields) > 0 && strings.EqualFold(fields[0], "off") {
+		p.autonum = false
+		return
+	}
+	if len(fields) > 0 {
+		if n, err := strconv.Atoi(fields[0]); err == nil {
+			p.msgNum = n
+		}
+	}
+	if len(fields) > 1 {
+		if n, err := strconv.Atoi(fields[1]); err == nil && n != 0 {
+			p.numStep = n
+		}
+	}
+}
+
+// isColor reports whether an operand is a CSS colour rather than a label.
+func isColor(s string) bool {
+	l := strings.ToLower(s)
+	return strings.HasPrefix(l, "rgb(") || strings.HasPrefix(l, "rgba(") || strings.HasPrefix(l, "#")
 }
