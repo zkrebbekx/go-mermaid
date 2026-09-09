@@ -216,7 +216,7 @@ func wrapParse(err error) error {
 }
 
 func renderFlowchart(src string, cfg config, title string) ([]byte, error) {
-	src, styles, links := parser.Preprocess(src)
+	src, styles, links, linkStyles := parser.Preprocess(src)
 
 	tokens, err := lexer.Lex(src)
 	if err != nil {
@@ -236,6 +236,11 @@ func renderFlowchart(src string, cfg config, title string) ([]byte, error) {
 	for id, url := range links {
 		if n := graph.NodeByID(id); n != nil {
 			n.Link = url
+		}
+	}
+	for i, e := range graph.Edges {
+		if st := linkStyles.For(i); st != nil {
+			e.Style = st
 		}
 	}
 

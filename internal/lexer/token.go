@@ -22,6 +22,8 @@ const (
 	ShapeClose
 	// Pipe is the | bracketing an inline edge label.
 	Pipe
+	// Amp is the & joining several nodes on one side of a link.
+	Amp
 )
 
 // Token is a lexical unit with its source position.

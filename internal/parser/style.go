@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/zkrebbekx/go-mermaid/internal/domain"
@@ -16,10 +18,11 @@ type classAssign struct {
 // inline :::class) out of the source. It returns the source with those
 // directives removed (so the lexer never sees their CSS-like payloads) and a
 // map of node ID to resolved Style. Directive order does not matter.
-func Preprocess(src string) (string, map[string]*domain.Style, map[string]string) {
+func Preprocess(src string) (string, map[string]*domain.Style, map[string]string, *LinkStyles) {
 	classDefs := map[string]*domain.Style{}
 	styles := map[string]*domain.Style{}
 	links := map[string]string{}
+	linkStyles := &LinkStyles{ByIndex: map[int]*domain.Style{}}
 
 	var pending []classAssign
 
@@ -43,12 +46,14 @@ func Preprocess(src string) (string, map[string]*domain.Style, map[string]string
 			if id != "" {
 				mergeStyle(styles, id, st)
 			}
+		case strings.HasPrefix(t, "linkStyle "):
+			parseLinkStyle(t, linkStyles)
 		case strings.HasPrefix(t, "click "):
 			if id, url := parseClick(t); id != "" && url != "" {
 				links[id] = url
 			}
 		default:
-			kept = append(kept, stripInline(line, &pending))
+			kept = append(kept, stripInline(expandShapeMeta(line), &pending))
 		}
 	}
 
@@ -61,7 +66,7 @@ func Preprocess(src string) (string, map[string]*domain.Style, map[string]string
 			mergeStyle(styles, strings.TrimSpace(id), st)
 		}
 	}
-	return strings.Join(kept, "\n"), styles, links
+	return strings.Join(kept, "\n"), styles, links, linkStyles
 }
 
 // parseClick handles "click ID href "URL"" and "click ID "URL"".
@@ -222,6 +227,10 @@ func parseProps(s string) *domain.Style {
 			st.Stroke = strings.TrimSpace(v)
 		case "color":
 			st.Color = strings.TrimSpace(v)
+		case "stroke-width":
+			st.StrokeWidth = strings.TrimSuffix(strings.TrimSpace(v), "px")
+		case "stroke-dasharray":
+			st.StrokeDash = strings.TrimSpace(v)
 		}
 	}
 	return st
@@ -243,4 +252,125 @@ func mergeStyle(m map[string]*domain.Style, id string, st *domain.Style) {
 	if st.Color != "" {
 		cur.Color = st.Color
 	}
+	if st.StrokeWidth != "" {
+		cur.StrokeWidth = st.StrokeWidth
+	}
+	if st.StrokeDash != "" {
+		cur.StrokeDash = st.StrokeDash
+	}
+}
+
+// LinkStyles holds the per-edge overrides from linkStyle directives. Default
+// applies to every edge that has no index-specific entry.
+type LinkStyles struct {
+	ByIndex map[int]*domain.Style
+	Default *domain.Style
+}
+
+// For returns the style for the edge at index i, or nil when none applies.
+func (l *LinkStyles) For(i int) *domain.Style {
+	if l == nil {
+		return nil
+	}
+	if st, ok := l.ByIndex[i]; ok {
+		return st
+	}
+	return l.Default
+}
+
+// parseLinkStyle reads `linkStyle 0,2 stroke:#f00,stroke-width:4px` and
+// `linkStyle default ...`. The selector is a comma-separated list of edge
+// indexes in source order, matching Mermaid.
+func parseLinkStyle(line string, into *LinkStyles) {
+	rest := strings.TrimSpace(line[len("linkStyle "):])
+	sel, props, ok := strings.Cut(rest, " ")
+	if !ok {
+		return
+	}
+	st := parseProps(props)
+	if strings.EqualFold(strings.TrimSpace(sel), "default") {
+		into.Default = st
+		return
+	}
+	for _, part := range strings.Split(sel, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil {
+			continue
+		}
+		into.ByIndex[n] = st
+	}
+}
+
+// shapeMetaRe matches the Mermaid 11 metadata form `A@{ shape: rect,
+// label: "Hi" }` on one line.
+var shapeMetaRe = regexp.MustCompile(`([A-Za-z0-9_.-]+)@\{([^}]*)\}`)
+
+// shapeDelims maps a Mermaid 11 shape name onto the bracket pair the lexer
+// already understands.
+var shapeDelims = map[string][2]string{
+	"rect": {"[", "]"}, "rectangle": {"[", "]"}, "process": {"[", "]"},
+	"rounded": {"(", ")"}, "round": {"(", ")"},
+	"stadium": {"([", "])"}, "pill": {"([", "])"},
+	"circle":  {"((", "))"},
+	"diamond": {"{", "}"}, "decision": {"{", "}"}, "rhombus": {"{", "}"},
+	"hexagon": {"{{", "}}"}, "hex": {"{{", "}}"},
+	"cylinder": {"[(", ")]"}, "database": {"[(", ")]"}, "db": {"[(", ")]"},
+	"subroutine": {"[[", "]]"}, "subprocess": {"[[", "]]"},
+}
+
+// expandShapeMeta rewrites the Mermaid 11 metadata form into the bracket form
+// the lexer understands, so `A@{ shape: circle, label: "Hi" }` becomes
+// `A((Hi))`. An unknown shape falls back to a rectangle.
+func expandShapeMeta(line string) string {
+	return shapeMetaRe.ReplaceAllStringFunc(line, func(m string) string {
+		sub := shapeMetaRe.FindStringSubmatch(m)
+		id, body := sub[1], sub[2]
+		shape, label := "", id
+		for _, part := range splitMeta(body) {
+			k, v, ok := strings.Cut(part, ":")
+			if !ok {
+				continue
+			}
+			v = strings.Trim(strings.TrimSpace(v), `"'`)
+			switch strings.ToLower(strings.TrimSpace(k)) {
+			case "shape":
+				shape = strings.ToLower(v)
+			case "label", "title":
+				label = v
+			}
+		}
+		d, ok := shapeDelims[shape]
+		if !ok {
+			d = [2]string{"[", "]"}
+		}
+		return id + d[0] + label + d[1]
+	})
+}
+
+// splitMeta splits metadata on commas that sit outside quotes, so a label may
+// contain a comma.
+func splitMeta(s string) []string {
+	var out []string
+	var cur strings.Builder
+	inQuote := byte(0)
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case inQuote != 0 && c == inQuote:
+			inQuote = 0
+			cur.WriteByte(c)
+		case inQuote == 0 && (c == '"' || c == '\''):
+			inQuote = c
+			cur.WriteByte(c)
+		case inQuote == 0 && c == ',':
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(c)
+		}
+	}
+	if cur.Len() > 0 {
+		out = append(out, cur.String())
+	}
+	return out
 }

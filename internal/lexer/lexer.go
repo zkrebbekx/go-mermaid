@@ -45,6 +45,9 @@ func (l *lexer) run() ([]Token, error) {
 			l.advance()
 		case r == '%' && l.peek(1) == '%':
 			l.skipComment() // %% line comment
+		case r == '&':
+			toks = append(toks, l.emit(Amp, "&"))
+			l.advance()
 		case r == '|':
 			tok, err := l.lexPipeLabel()
 			if err != nil {
@@ -71,8 +74,20 @@ func (l *lexer) run() ([]Token, error) {
 
 func (l *lexer) lexIdent() Token {
 	start, col := l.pos, l.col
-	for l.pos < len(l.src) && isIdentRune(l.src[l.pos]) {
-		l.advance()
+	for l.pos < len(l.src) {
+		r := l.src[l.pos]
+		if isIdentRune(r) {
+			l.advance()
+			continue
+		}
+		// A single hyphen or dot joins an identifier, as in "node-1" and
+		// "a.b", but only when a word character follows. That keeps the
+		// connectors "-->" and "-.->" out of the identifier.
+		if (r == '-' || r == '.') && l.pos+1 < len(l.src) && isIdentRune(l.src[l.pos+1]) {
+			l.advance()
+			continue
+		}
+		break
 	}
 	val := string(l.src[start:l.pos])
 	k := Ident
