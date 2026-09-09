@@ -52,6 +52,21 @@ jobs:
         with:
           version: latest
 
+  gallery:
+    name: gallery up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+      # The README images are committed. A rendering change must be followed
+      # by `go run ./internal/gallery/cmd` or the README shows output the
+      # code no longer produces.
+      - name: Check README images match the renderer
+        run: go run ./internal/gallery/cmd -check
+
   release-check:
     name: goreleaser dry-run
     runs-on: ubuntu-latest
