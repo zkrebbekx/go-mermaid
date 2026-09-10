@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.5...v0.1.6) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** patch golang.org/x/image and golang.org/x/net advisories ([#40](https://github.com/zkrebbekx/go-mermaid/issues/40)) ([2a04b3d](https://github.com/zkrebbekx/go-mermaid/commit/2a04b3d7f47d627051c40c921c153f1dc73100df))
+
 ## [0.1.5](https://github.com/zkrebbekx/go-mermaid/compare/v0.1.4...v0.1.5) (2026-09-09)
 
 
