@@ -33,7 +33,7 @@ func RasterizeSVG(svg []byte, scale float64) ([]byte, error) {
 	if scale <= 0 {
 		scale = 1
 	}
-	icon, err := oksvg.ReadIconStream(bytes.NewReader(svg))
+	icon, err := oksvg.ReadIconStream(bytes.NewReader(fillRadii(svg)))
 	if err != nil {
 		return nil, fmt.Errorf("rasterize: parse svg: %w", err)
 	}
@@ -58,6 +58,36 @@ func RasterizeSVG(svg []byte, scale float64) ([]byte, error) {
 		return nil, fmt.Errorf("rasterize: encode png: %w", err)
 	}
 	return buf.Bytes(), nil
+}
+
+var (
+	rectTagRe = regexp.MustCompile(`<rect\s[^>]*>`)
+	radiusRe  = regexp.MustCompile(`\s(rx|ry)\s*=\s*(?:"([^"]*)"|'([^']*)')`)
+)
+
+// fillRadii gives every <rect> with only one of rx and ry the other one too.
+// SVG defaults the missing radius to the given one, but oksvg defaults it to
+// 0 and then draws square corners.
+func fillRadii(svg []byte) []byte {
+	return rectTagRe.ReplaceAllFunc(svg, func(tag []byte) []byte {
+		ms := radiusRe.FindAllSubmatch(tag, -1)
+		if len(ms) != 1 {
+			return tag
+		}
+		val := ms[0][2]
+		if val == nil {
+			val = ms[0][3]
+		}
+		missing := "ry"
+		if string(ms[0][1]) == "ry" {
+			missing = "rx"
+		}
+		if bytes.ContainsRune(val, '"') {
+			return tag
+		}
+		out := []byte(`<rect ` + missing + `="` + string(val) + `"`)
+		return append(out, tag[len("<rect"):]...)
+	})
 }
 
 var rootSizeRe = regexp.MustCompile(`<svg\b[^>]*\bfont-size="([0-9.]+)"`)
