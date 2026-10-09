@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
+	mermaid "github.com/zkrebbekx/go-mermaid"
 )
 
 func resetFlags(args ...string) {
@@ -138,6 +141,56 @@ func TestRunMissingFile(t *testing.T) {
 
 			Convey("Then it returns an error", func() {
 				So(err, ShouldNotBeNil)
+			})
+		})
+	})
+}
+
+func TestUsageListsEveryDiagramType(t *testing.T) {
+	Convey("Given the CLI flags", t, func() {
+		resetFlags()
+		var out bytes.Buffer
+		flag.CommandLine.SetOutput(&out)
+
+		Convey("When printing usage", func() {
+			usage()
+			text := strings.Join(strings.Fields(out.String()), " ")
+
+			Convey("Then every type from -list-types is named", func() {
+				for _, typ := range mermaid.DiagramTypes() {
+					So(text, ShouldContainSubstring, typ)
+				}
+			})
+		})
+	})
+}
+
+func TestWrapList(t *testing.T) {
+	Convey("Given items longer than one line", t, func() {
+		items := []string{"alpha", "beta / gamma", "delta", "epsilon"}
+
+		Convey("When wrapping at 20 columns", func() {
+			got := wrapList(items, "  ", 20)
+
+			Convey("Then lines break between items and stay within the width", func() {
+				So(got, ShouldEqual, "  alpha,\n  beta / gamma,\n  delta, epsilon\n")
+				for _, ln := range strings.Split(strings.TrimSuffix(got, "\n"), "\n") {
+					So(len(ln), ShouldBeLessThanOrEqualTo, 20)
+				}
+			})
+		})
+
+		Convey("When an item is wider than the line", func() {
+			got := wrapList([]string{"a", "abcdefghijklmnopqrstuvwxyz", "b"}, "  ", 10)
+
+			Convey("Then it gets a line of its own", func() {
+				So(got, ShouldEqual, "  a,\n  abcdefghijklmnopqrstuvwxyz,\n  b\n")
+			})
+		})
+
+		Convey("When there are no items", func() {
+			Convey("Then nothing is printed", func() {
+				So(wrapList(nil, "  ", 20), ShouldEqual, "")
 			})
 		})
 	})

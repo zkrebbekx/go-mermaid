@@ -198,14 +198,41 @@ func firstArg(args []string) string {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `mermaid %s - render Mermaid diagrams to SVG (pure Go)
+	out := flag.CommandLine.Output()
+	_, _ = fmt.Fprintf(out, `mermaid %s - render Mermaid diagrams to SVG (pure Go)
 
 Usage:
   mermaid [flags] [input ...]
 
-Supported diagrams: flowchart, sequence, class, state, ER, pie.
-
+Supported diagrams:
+%s
 Flags:
-`, version)
+`, version, wrapList(mermaid.DiagramTypes(), "  ", 78))
 	flag.PrintDefaults()
+}
+
+// wrapList joins items with ", " into indented lines that fit in width
+// columns where possible. It breaks only between items, so an item longer
+// than width gets a line of its own.
+func wrapList(items []string, indent string, width int) string {
+	if len(items) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	line := indent
+	for i, it := range items {
+		if i < len(items)-1 {
+			it += ","
+		}
+		if line != indent && len(line)+1+len(it) > width {
+			b.WriteString(line + "\n")
+			line = indent
+		}
+		if line != indent {
+			line += " "
+		}
+		line += it
+	}
+	b.WriteString(line + "\n")
+	return b.String()
 }

@@ -1,6 +1,8 @@
 package mermaid
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -31,5 +33,33 @@ func TestDetectKind(t *testing.T) {
 				})
 			})
 		}
+	})
+}
+
+func TestDiagramTypesMatchDetection(t *testing.T) {
+	Convey("Given the advertised diagram types", t, func() {
+		var headers []string
+		for _, entry := range DiagramTypes() {
+			headers = append(headers, strings.Split(entry, " / ")...)
+		}
+
+		Convey("When detecting each header", func() {
+			seen := map[kind]bool{}
+			for _, h := range headers {
+				seen[detectKind(h)] = true
+			}
+
+			Convey("Then every header is recognised", func() {
+				for _, h := range headers {
+					SoMsg(h, detectKind(h), ShouldNotEqual, kindUnknown)
+				}
+			})
+
+			Convey("Then every kind the dispatcher knows is advertised", func() {
+				for k := kindUnknown + 1; k < kindEnd; k++ {
+					SoMsg(fmt.Sprintf("kind %d", k), seen[k], ShouldBeTrue)
+				}
+			})
+		})
 	})
 }

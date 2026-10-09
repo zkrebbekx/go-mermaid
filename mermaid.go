@@ -1,11 +1,9 @@
 // Package mermaid renders Mermaid diagrams to SVG in pure Go, with no
 // headless browser or JavaScript runtime required.
 //
-// Supported diagram types are detected from the source header: flowchart
-// (graph/flowchart), sequenceDiagram, classDiagram, stateDiagram-v2,
-// erDiagram, pie, journey, quadrantChart, gitGraph, timeline, mindmap,
-// gantt, C4 (C4Context/C4Container), requirementDiagram, sankey-beta, and
-// xychart-beta. Unsupported types return ErrUnsupported; see DiagramTypes.
+// The diagram type is detected from the source header, such as flowchart,
+// sequenceDiagram or gantt. DiagramTypes lists every supported header.
+// Unsupported types return ErrUnsupported.
 //
 // Render returns SVG. For PNG, use the github.com/zkrebbekx/go-mermaid/raster
 // subpackage, which keeps the rasterizer dependency out of the core library.

@@ -27,6 +27,9 @@ const (
 	kindKanban
 	kindPacket
 	kindRadar
+
+	// kindEnd marks the end of the list; keep it last.
+	kindEnd
 )
 
 // detectKind inspects the first non-empty, non-comment line and maps its
