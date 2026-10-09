@@ -90,6 +90,34 @@ func TestSVG(t *testing.T) {
 				So(string(out), ShouldNotContainSubstring, "marker-end")
 			})
 		})
+
+		Convey("When a dotted or thick link has no head", func() {
+			dotted, _ := SVG(laidOut("graph TD\nA -.- B"), opts)
+			thick, _ := SVG(laidOut("graph TD\nA === B"), opts)
+			Convey("Then no marker is drawn", func() {
+				So(string(dotted), ShouldNotContainSubstring, "marker-end")
+				So(string(thick), ShouldNotContainSubstring, "marker-end")
+			})
+		})
+
+		Convey("When links end in crosses, circles and arrows on both ends", func() {
+			out, _ := SVG(laidOut("graph LR\nA x--o B\nC <--> D"), opts)
+			Convey("Then each end uses its marker", func() {
+				So(string(out), ShouldContainSubstring, `marker-start="url(#cross)" marker-end="url(#circle)"`)
+				So(string(out), ShouldContainSubstring, `marker-start="url(#arrow)" marker-end="url(#arrow)"`)
+				So(string(out), ShouldContainSubstring, `<marker id="cross"`)
+				So(string(out), ShouldContainSubstring, `<marker id="circle"`)
+			})
+		})
+
+		Convey("When no link uses a cross or circle", func() {
+			out, _ := SVG(laidOut("graph LR\nA --> B"), opts)
+			Convey("Then only the arrowhead marker is defined", func() {
+				So(string(out), ShouldContainSubstring, `<marker id="arrow"`)
+				So(string(out), ShouldNotContainSubstring, `<marker id="cross"`)
+				So(string(out), ShouldNotContainSubstring, `<marker id="circle"`)
+			})
+		})
 	})
 
 	Convey("Given an edge label", t, func() {

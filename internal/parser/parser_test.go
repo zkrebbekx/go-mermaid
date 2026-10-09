@@ -67,3 +67,88 @@ func TestParse(t *testing.T) {
 		})
 	})
 }
+
+func TestLinkHeads(t *testing.T) {
+	Convey("Given links with different ends", t, func() {
+		cases := []struct {
+			in         string
+			arrow      domain.Arrow
+			tail, head domain.Head
+		}{
+			{"A --> B", domain.ArrowNormal, domain.HeadNone, domain.HeadArrow},
+			{"A --- B", domain.ArrowOpen, domain.HeadNone, domain.HeadNone},
+			{"A --x B", domain.ArrowOpen, domain.HeadNone, domain.HeadCross},
+			{"A --o B", domain.ArrowOpen, domain.HeadNone, domain.HeadCircle},
+			{"A x--x B", domain.ArrowOpen, domain.HeadCross, domain.HeadCross},
+			{"A o--o B", domain.ArrowOpen, domain.HeadCircle, domain.HeadCircle},
+			{"A <--> B", domain.ArrowNormal, domain.HeadArrow, domain.HeadArrow},
+			{"A -.- B", domain.ArrowDotted, domain.HeadNone, domain.HeadNone},
+			{"A -.-> B", domain.ArrowDotted, domain.HeadNone, domain.HeadArrow},
+			{"A <-.-> B", domain.ArrowDotted, domain.HeadArrow, domain.HeadArrow},
+			{"A === B", domain.ArrowThick, domain.HeadNone, domain.HeadNone},
+			{"A o==o B", domain.ArrowThick, domain.HeadCircle, domain.HeadCircle},
+			{"A x-- text --o B", domain.ArrowOpen, domain.HeadCross, domain.HeadCircle},
+			{"A <-- text --> B", domain.ArrowNormal, domain.HeadArrow, domain.HeadArrow},
+			{"A -->|text| B", domain.ArrowNormal, domain.HeadNone, domain.HeadArrow},
+			{"A x-- x --x B", domain.ArrowOpen, domain.HeadCross, domain.HeadCross},
+		}
+		for _, c := range cases {
+			Convey("When parsing "+c.in, func() {
+				g, err := parse("flowchart LR\n" + c.in)
+
+				Convey("Then there are two nodes, one edge and the right ends", func() {
+					So(err, ShouldBeNil)
+					So(len(g.Nodes), ShouldEqual, 2)
+					So(len(g.Edges), ShouldEqual, 1)
+					e := g.Edges[0]
+					So(e.Arrow, ShouldEqual, c.arrow)
+					So(e.Tail, ShouldEqual, c.tail)
+					So(e.Head, ShouldEqual, c.head)
+				})
+			})
+		}
+	})
+
+	Convey("Given a label that is just x", t, func() {
+		g, err := parse("flowchart LR\nA -- x --> B")
+
+		Convey("When parsing", func() {
+			Convey("Then x is the label, not a head or a node", func() {
+				So(err, ShouldBeNil)
+				So(len(g.Nodes), ShouldEqual, 2)
+				So(g.Edges[0].Label, ShouldEqual, "x")
+				So(g.Edges[0].Head, ShouldEqual, domain.HeadArrow)
+			})
+		})
+	})
+
+	Convey("Given a link ending in x or o with no target", t, func() {
+		Convey("When parsing", func() {
+			// As in Mermaid.js, a trailing x or o is a head, so a node named
+			// x or o must be written with a space: A --- x.
+			for _, src := range []string{"A --x", "A --o", "A ---o[Label]"} {
+				_, err := parse("flowchart LR\n" + src)
+				var pe *ParseError
+
+				Convey("Then "+src+" reports a missing node", func() {
+					So(errors.As(err, &pe), ShouldBeTrue)
+					So(pe.Msg, ShouldContainSubstring, "expected node identifier")
+				})
+			}
+		})
+	})
+
+	Convey("Given an open link followed by another link", t, func() {
+		g, err := parse("flowchart LR\nA --- B --> C")
+
+		Convey("When parsing", func() {
+			Convey("Then it is a chain of two links, not a label", func() {
+				So(err, ShouldBeNil)
+				So(len(g.Nodes), ShouldEqual, 3)
+				So(len(g.Edges), ShouldEqual, 2)
+				So(g.Edges[0].Label, ShouldBeEmpty)
+				So(g.Edges[1].From, ShouldEqual, "B")
+			})
+		})
+	})
+}

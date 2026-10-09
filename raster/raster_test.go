@@ -2,6 +2,8 @@ package raster_test
 
 import (
 	"bytes"
+	"fmt"
+	"image"
 	"image/png"
 	"testing"
 
@@ -54,4 +56,56 @@ func TestPNG(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestLinkHeadMarkers(t *testing.T) {
+	Convey("Given lines ending in each marker", t, func() {
+		line := func(y int, start, end string) string {
+			return fmt.Sprintf(`<path d="M10,%d L90,%d" stroke="#000000" stroke-width="1.5" marker-start="url(#%s)" marker-end="url(#%s)"/>`, y, y, start, end)
+		}
+		svg := `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="60" viewBox="0 0 100 60">` +
+			line(10, "circle", "circle") + line(30, "cross", "cross") + line(50, "arrow", "arrow") +
+			`</svg>`
+		// Curved edges repeat each end point as a control point.
+		curved := `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="20" viewBox="0 0 100 20">` +
+			`<path d="M10,10 Q10,10 50,10 Q90,10 90,10" stroke="#000000" stroke-width="1.5" marker-start="url(#circle)" marker-end="url(#circle)"/>` +
+			`</svg>`
+
+		Convey("When rasterizing it", func() {
+			out, err := raster.RasterizeSVG([]byte(svg), 1)
+			So(err, ShouldBeNil)
+			img, err := png.Decode(bytes.NewReader(out))
+			So(err, ShouldBeNil)
+
+			Convey("Then a circle is drawn 4 units back from both ends", func() {
+				So(opacityAt(img, image.Pt(85, 13)), ShouldEqual, 0xff)
+				So(opacityAt(img, image.Pt(14, 7)), ShouldEqual, 0xff)
+			})
+
+			Convey("Then a cross's arms reach off the line at both ends", func() {
+				So(opacityAt(img, image.Pt(83, 33)), ShouldBeGreaterThan, 0x80)
+				So(opacityAt(img, image.Pt(16, 27)), ShouldBeGreaterThan, 0x80)
+			})
+
+			Convey("Then a curved path gets markers at both ends", func() {
+				out, err := raster.RasterizeSVG([]byte(curved), 1)
+				So(err, ShouldBeNil)
+				img, err := png.Decode(bytes.NewReader(out))
+				So(err, ShouldBeNil)
+				So(opacityAt(img, image.Pt(85, 13)), ShouldEqual, 0xff)
+				So(opacityAt(img, image.Pt(14, 13)), ShouldEqual, 0xff)
+			})
+
+			Convey("Then an arrowhead fills the line near both tips", func() {
+				So(opacityAt(img, image.Pt(84, 51)), ShouldEqual, 0xff)
+				So(opacityAt(img, image.Pt(15, 48)), ShouldEqual, 0xff)
+			})
+		})
+	})
+}
+
+// opacityAt returns the alpha of the pixel at p; the page itself is clear.
+func opacityAt(img image.Image, p image.Point) uint32 {
+	_, _, _, a := img.At(p.X, p.Y).RGBA()
+	return a >> 8
 }

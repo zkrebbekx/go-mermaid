@@ -9,15 +9,18 @@ import (
 )
 
 // oksvg does not render SVG markers, so arrowheads on marker-end edges are
-// missing. We synthesize them: find marker-end <path>/<line> elements, take
-// the last segment, and fill a triangle at the tip.
+// missing. We synthesize them: find elements with a marker-end or
+// marker-start, take the segment at that end, and draw the marker there. The
+// flowchart's cross and circle markers get their own shapes; every other
+// marker is drawn as a triangle.
 
 var (
-	markerElemRe = regexp.MustCompile(`(?s)<(path|line)\b([^>]*marker-end="url\([^"]*"[^>]*)>`)
+	markerElemRe = regexp.MustCompile(`(?s)<(path|line)\b([^>]*marker-(?:end|start)="url\([^"]*"[^>]*)>`)
+	markerIDRe   = regexp.MustCompile(`url\(#([^)]*)\)`)
 	numRe        = regexp.MustCompile(`-?[0-9]+(?:\.[0-9]+)?`)
 )
 
-// drawArrows draws arrowheads for marker-end edges onto img.
+// drawArrows draws the end markers of marked edges onto img.
 func drawArrows(img *image.RGBA, svg string, scale float64) {
 	gx, gy := 0.0, 0.0
 	if loc := groupRe.FindStringSubmatch(svg); loc != nil {
@@ -27,33 +30,113 @@ func drawArrows(img *image.RGBA, svg string, scale float64) {
 	for _, m := range markerElemRe.FindAllStringSubmatch(svg, -1) {
 		attrs := parseAttrs(m[2])
 		col := colorOf(attrs["stroke"])
-		var tx, ty, px, py float64
-		var ok bool
+		var pts []float64
 		if m[1] == "line" {
-			tx, ty = numAttr(attrs["x2"], "0"), numAttr(attrs["y2"], "0")
-			px, py = numAttr(attrs["x1"], "0"), numAttr(attrs["y1"], "0")
-			ok = true
+			for _, k := range []string{"x1", "y1", "x2", "y2"} {
+				pts = append(pts, numAttr(attrs[k], "0"))
+			}
 		} else {
-			tx, ty, px, py, ok = lastSegment(attrs["d"])
+			pts = pathNums(attrs["d"])
 		}
-		if !ok {
+		if len(pts) < 4 {
 			continue
 		}
-		arrowhead(img, (tx+gx)*scale, (ty+gy)*scale, (px+gx)*scale, (py+gy)*scale, scale, col)
+		at := func(i int) (float64, float64) {
+			return (pts[i] + gx) * scale, (pts[i+1] + gy) * scale
+		}
+		// The direction comes from the nearest point that differs from the
+		// tip: curved paths repeat the first point as a control point.
+		toward := func(tip, step int) (float64, float64) {
+			tx, ty := at(tip)
+			for i := tip + step; i >= 0 && i+1 < len(pts); i += step {
+				if px, py := at(i); px != tx || py != ty {
+					return px, py
+				}
+			}
+			return tx, ty
+		}
+		n := len(pts) &^ 1
+		if id := markerID(attrs["marker-end"]); id != "" {
+			tx, ty := at(n - 2)
+			px, py := toward(n-2, -2)
+			drawMarker(img, id, tx, ty, px, py, scale, col)
+		}
+		if id := markerID(attrs["marker-start"]); id != "" {
+			tx, ty := at(0)
+			px, py := toward(0, 2)
+			drawMarker(img, id, tx, ty, px, py, scale, col)
+		}
 	}
 }
 
-// lastSegment returns the final point and the one before it from a path's d.
-func lastSegment(d string) (tx, ty, px, py float64, ok bool) {
-	nums := numRe.FindAllString(d, -1)
-	if len(nums) < 4 {
-		return 0, 0, 0, 0, false
+// markerID returns the id in a url(#id) reference, or "" for none.
+func markerID(ref string) string {
+	if m := markerIDRe.FindStringSubmatch(ref); m != nil {
+		return m[1]
 	}
-	tx, _ = strconv.ParseFloat(nums[len(nums)-2], 64)
-	ty, _ = strconv.ParseFloat(nums[len(nums)-1], 64)
-	px, _ = strconv.ParseFloat(nums[len(nums)-4], 64)
-	py, _ = strconv.ParseFloat(nums[len(nums)-3], 64)
-	return tx, ty, px, py, true
+	return ""
+}
+
+// pathNums returns the coordinates in a path's d, in order.
+func pathNums(d string) []float64 {
+	nums := numRe.FindAllString(d, -1)
+	out := make([]float64, 0, len(nums))
+	for _, s := range nums {
+		v, _ := strconv.ParseFloat(s, 64)
+		out = append(out, v)
+	}
+	return out
+}
+
+// drawMarker draws the marker named id with its tip at (tx,ty), pointing
+// away from (px,py). Cross and circle match the flowchart's SVG markers: a
+// 10-unit box drawn at 0.7 of the 1.5 stroke, centred 4 units back from the
+// tip.
+func drawMarker(img *image.RGBA, id string, tx, ty, px, py, scale float64, col color.Color) {
+	dx, dy := tx-px, ty-py
+	d := math.Hypot(dx, dy)
+	if d == 0 {
+		return
+	}
+	dx, dy = dx/d, dy/d
+	u := 1.05 * scale
+	cx, cy := tx-dx*4*u, ty-dy*4*u
+	switch id {
+	case "cross":
+		for _, s := range []float64{1, -1} {
+			ax, ay := (dx-s*dy)*4*u, (dy+s*dx)*4*u
+			strokeLine(img, cx-ax, cy-ay, cx+ax, cy+ay, 2*u, col)
+		}
+	case "circle":
+		fillCircle(img, cx, cy, 4*u, col)
+	default:
+		arrowhead(img, tx, ty, px, py, scale, col)
+	}
+}
+
+// fillCircle fills a disc of radius r centred on (cx,cy).
+func fillCircle(img *image.RGBA, cx, cy, r float64, col color.Color) {
+	b := img.Bounds()
+	for y := int(math.Floor(cy - r)); y <= int(math.Ceil(cy+r)); y++ {
+		for x := int(math.Floor(cx - r)); x <= int(math.Ceil(cx+r)); x++ {
+			if math.Hypot(float64(x)+0.5-cx, float64(y)+0.5-cy) <= r && image.Pt(x, y).In(b) {
+				img.Set(x, y, col)
+			}
+		}
+	}
+}
+
+// strokeLine draws a line of width w from (x0,y0) to (x1,y1) as two
+// triangles.
+func strokeLine(img *image.RGBA, x0, y0, x1, y1, w float64, col color.Color) {
+	dx, dy := x1-x0, y1-y0
+	d := math.Hypot(dx, dy)
+	if d == 0 {
+		return
+	}
+	nx, ny := -dy/d*w/2, dx/d*w/2
+	fillTriangle(img, x0+nx, y0+ny, x1+nx, y1+ny, x1-nx, y1-ny, col)
+	fillTriangle(img, x0+nx, y0+ny, x1-nx, y1-ny, x0-nx, y0-ny, col)
 }
 
 // arrowhead fills a triangle at (tx,ty) pointing away from (px,py).

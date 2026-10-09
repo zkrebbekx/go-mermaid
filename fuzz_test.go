@@ -27,6 +27,7 @@ func FuzzRender(f *testing.F) {
 		"gantt\ndateFormat YYYY-MM-DD\nsection S\nA : a1, 2024-01-01, 10d\nB : after a1, 2w",
 		"graph TD\nA[[x]] --> B[(y)] --> C{{z}}\nA:::cls\nclassDef cls fill:#f00",
 		"graph TD\nsubgraph one\nA-->B\nend",
+		"flowchart LR\nA x--o B\nC <-.-> D\nx --x o\nE o==\nF --- G --> H",
 		"sequenceDiagram\nautonumber\nloop x\nA->>B: hi\nend",
 		"",
 		"graph",

@@ -60,7 +60,7 @@ func (l *lexer) run() ([]Token, error) {
 				return nil, err
 			}
 			toks = append(toks, tok...)
-		case isConnectorRune(r):
+		case isConnectorRune(r), isHeadRune(r) && l.startsLink(toks):
 			toks = append(toks, l.lexArrow())
 		case isIdentRune(r):
 			toks = append(toks, l.lexIdent())
@@ -97,13 +97,51 @@ func (l *lexer) lexIdent() Token {
 	return Token{Kind: k, Val: val, Line: l.line, Col: col}
 }
 
-// lexArrow consumes a maximal run of connector runes (e.g. -->, -.->, ==>).
+// lexArrow consumes a maximal run of connector runes (e.g. -->, -.->, ==>),
+// with a cross or circle head on either end (x--x, --o).
 func (l *lexer) lexArrow() Token {
 	start, col := l.pos, l.col
+	if isHeadRune(l.src[l.pos]) {
+		l.advance()
+	}
+	run := l.pos
 	for l.pos < len(l.src) && isConnectorRune(l.src[l.pos]) {
 		l.advance()
 	}
+	if l.pos-run >= 2 && l.endsLink() {
+		l.advance()
+	}
 	return Token{Kind: Arrow, Val: string(l.src[start:l.pos]), Line: l.line, Col: col}
+}
+
+// startsLink reports whether the x or o at pos is the tail of a link, as in
+// A x--x B, rather than a node ID. It must follow a node, after a space, and
+// lead straight into "--", "==" or "-.", so x-1 and A & x --> B keep their
+// node x.
+func (l *lexer) startsLink(toks []Token) bool {
+	if len(toks) == 0 || l.pos == 0 || (l.src[l.pos-1] != ' ' && l.src[l.pos-1] != '\t') {
+		return false
+	}
+	if k := toks[len(toks)-1].Kind; k != Ident && k != ShapeClose {
+		return false
+	}
+	a, b := l.peek(1), l.peek(2)
+	return (a == '-' && (b == '-' || b == '.')) || (a == '=' && b == '=')
+}
+
+// endsLink reports whether the x or o at pos is the head of the link just
+// lexed, as in --x. The link must end in a line rune and the head must not
+// run on into a word, so A --- ops keeps its node and A --oops stays a node
+// called oops.
+func (l *lexer) endsLink() bool {
+	if l.pos >= len(l.src) || !isHeadRune(l.src[l.pos]) {
+		return false
+	}
+	if prev := l.src[l.pos-1]; prev != '-' && prev != '=' {
+		return false
+	}
+	next := l.peek(1)
+	return !isIdentRune(next) && !isConnectorRune(next)
 }
 
 // lexShape captures a node shape: opener, inner text, closer. Some openers
@@ -255,6 +293,9 @@ func isConnectorRune(r rune) bool {
 	}
 	return false
 }
+
+// isHeadRune reports whether r can be a cross or circle link head.
+func isHeadRune(r rune) bool { return r == 'x' || r == 'o' }
 
 func isIdentRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'

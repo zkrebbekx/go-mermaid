@@ -111,6 +111,7 @@ func (p *parser) parseStatement() error {
 	}
 	for p.at(lexer.Arrow) {
 		arrowTok := p.cur()
+		tail := tailOf(arrowTok.Val)
 		p.next()
 
 		label := ""
@@ -125,11 +126,10 @@ func (p *parser) parseStatement() error {
 				return p.errAt(p.cur(), "expected closing '|'")
 			}
 			p.next()
-		} else if !strings.Contains(arrowTok.Val, ">") {
+		} else if opensLabel(arrowTok.Val) {
 			// Possible middle-form label: A -- text --> B / A == t ==> B.
-			// The first connector is open (no arrowhead); words between it and
-			// a second connector are the label, and that second connector
-			// determines the arrow style.
+			// Words between the opener and a second connector are the label,
+			// and that second connector sets the line style and the head.
 			saved := p.pos
 			var words []string
 			for p.at(lexer.Ident) || p.at(lexer.Text) {
@@ -158,6 +158,8 @@ func (p *parser) parseStatement() error {
 					To:    t.ID,
 					Label: label,
 					Arrow: arrowKind(arrowTok.Val),
+					Head:  headOf(arrowTok.Val),
+					Tail:  tail,
 				})
 			}
 		}
@@ -291,6 +293,38 @@ func shapeKind(open, closer string) domain.Shape {
 	default:
 		return domain.ShapeRect
 	}
+}
+
+// opensLabel reports whether a connector can open a middle-form label. As in
+// Mermaid, only "--", "==" and "-." can, optionally after a tail head, so
+// A --- B --> C stays a chain of two links.
+func opensLabel(s string) bool {
+	if len(s) == 3 && strings.ContainsRune("xo<", rune(s[0])) {
+		s = s[1:]
+	}
+	return s == "--" || s == "==" || s == "-."
+}
+
+// headOf returns the marker at the target end of a connector such as --x.
+func headOf(s string) domain.Head {
+	return markerOf(s[len(s)-1], '>')
+}
+
+// tailOf returns the marker at the source end of a connector such as o--o.
+func tailOf(s string) domain.Head {
+	return markerOf(s[0], '<')
+}
+
+func markerOf(c, arrow byte) domain.Head {
+	switch c {
+	case arrow:
+		return domain.HeadArrow
+	case 'x':
+		return domain.HeadCross
+	case 'o':
+		return domain.HeadCircle
+	}
+	return domain.HeadNone
 }
 
 func arrowKind(s string) domain.Arrow {

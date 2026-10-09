@@ -76,9 +76,7 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 		num(w), num(h), num(w), num(h), esc(opts.FontFace), num(opts.FontSize))
 	b.WriteByte('\n')
 
-	// Arrowhead marker.
-	fmt.Fprintf(&b, `  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="%s"/></marker></defs>`, pal.Edge)
-	b.WriteByte('\n')
+	writeMarkers(&b, res.Graph, pal)
 
 	fmt.Fprintf(&b, `  <rect width="100%%" height="100%%" fill="%s"/>`, pal.Background)
 	b.WriteByte('\n')
@@ -100,6 +98,30 @@ func SVG(res *layout.Result, opts Options) ([]byte, error) {
 
 	b.WriteString("  </g>\n</svg>\n")
 	return []byte(b.String()), nil
+}
+
+// writeMarkers defines the edge end markers. The arrowhead is always
+// defined; the cross and circle only when an edge uses them. Each is drawn
+// with its outer edge on the node border, and reversed at a path's start.
+//
+// The cross and circle are sized in user space, so a thick line doesn't
+// double them; at the default stroke they match the arrowhead's 10.5 px.
+func writeMarkers(b *strings.Builder, g *domain.Graph, pal theme.Palette) {
+	used := map[domain.Head]bool{}
+	for _, e := range g.Edges {
+		used[e.Head], used[e.Tail] = true, true
+	}
+	b.WriteString(`  <defs>`)
+	const box = `viewBox="0 0 10 10" refX="9" refY="5" orient="auto-start-reverse"`
+	fmt.Fprintf(b, `<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="%s"/></marker>`, pal.Edge)
+	const fixed = box + ` markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="10.5"`
+	if used[domain.HeadCross] {
+		fmt.Fprintf(b, `<marker id="cross" %s><path d="M1,1 L9,9 M1,9 L9,1" stroke="%s" stroke-width="2"/></marker>`, fixed, pal.Edge)
+	}
+	if used[domain.HeadCircle] {
+		fmt.Fprintf(b, `<marker id="circle" %s><circle cx="5" cy="5" r="4" fill="%s"/></marker>`, fixed, pal.Edge)
+	}
+	b.WriteString("</defs>\n")
 }
 
 func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved bool, face svgutil.Face, fontSize float64) {
@@ -139,9 +161,12 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved boo
 			dash = fmt.Sprintf(` stroke-dasharray="%s"`, esc(st.StrokeDash))
 		}
 	}
-	marker := ` marker-end="url(#arrow)"`
-	if e.Arrow == domain.ArrowOpen {
-		marker = ""
+	marker := ""
+	if e.Tail != domain.HeadNone {
+		marker += fmt.Sprintf(` marker-start="url(#%s)"`, e.Tail)
+	}
+	if e.Head != domain.HeadNone {
+		marker += fmt.Sprintf(` marker-end="url(#%s)"`, e.Head)
 	}
 	fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s" stroke-width="%s"%s%s/>`,
 		strings.TrimSpace(d.String()), esc(stroke), width, dash, marker)
