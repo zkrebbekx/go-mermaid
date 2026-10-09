@@ -67,3 +67,62 @@ func TestParse(t *testing.T) {
 		})
 	})
 }
+
+func TestQuotedMiddleLabels(t *testing.T) {
+	Convey("Given middle-form edge labels in quotes", t, func() {
+		cases := []struct {
+			in    string
+			label string
+			arrow domain.Arrow
+		}{
+			{`A -- "quoted label" --> B`, "quoted label", domain.ArrowNormal},
+			{`A -. "dotted quoted" .-> B`, "dotted quoted", domain.ArrowDotted},
+			{`A == "thick" ==> B`, "thick", domain.ArrowThick},
+			{`A --"tight"--> B`, "tight", domain.ArrowNormal},
+			{`A -- "a<br/>b" --> B`, "a<br/>b", domain.ArrowNormal},
+			{`A -- "has (parens)" --> B`, "has (parens)", domain.ArrowNormal},
+			{`A -- "open" --- B`, "open", domain.ArrowOpen},
+			{`A -- "" --> B`, "", domain.ArrowNormal},
+			// Mermaid.js rejects words around a quoted string; we join them.
+			{`A -- foo "bar" baz --> B`, "foo bar baz", domain.ArrowNormal},
+		}
+		for _, c := range cases {
+			Convey("When parsing "+c.in, func() {
+				g, err := parse("flowchart LR\n" + c.in)
+
+				Convey("Then one edge carries the unquoted label and the closing style", func() {
+					So(err, ShouldBeNil)
+					So(len(g.Edges), ShouldEqual, 1)
+					So(g.Edges[0].Label, ShouldEqual, c.label)
+					So(g.Edges[0].Arrow, ShouldEqual, c.arrow)
+				})
+			})
+		}
+
+		Convey("When the quote is not closed", func() {
+			_, err := parse("flowchart LR\nA -- \"unterminated --> B")
+
+			Convey("Then a ParseError points at the opening quote", func() {
+				var pe *ParseError
+				So(errors.As(err, &pe), ShouldBeTrue)
+				So(pe.Line, ShouldEqual, 2)
+				So(pe.Col, ShouldEqual, 6)
+			})
+		})
+	})
+}
+
+func TestQuotedSubgraphTitle(t *testing.T) {
+	Convey("Given a subgraph with a quoted title", t, func() {
+		g, err := parse("flowchart LR\nsubgraph \"Quoted Title\"\nA --> B\nend")
+
+		Convey("When parsing", func() {
+			Convey("Then the title is the unquoted text and holds both nodes", func() {
+				So(err, ShouldBeNil)
+				So(len(g.Subgraphs), ShouldEqual, 1)
+				So(g.Subgraphs[0].Title, ShouldEqual, "Quoted Title")
+				So(g.Subgraphs[0].NodeIDs, ShouldResemble, []string{"A", "B"})
+			})
+		})
+	})
+}

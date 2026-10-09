@@ -1,0 +1,8 @@
+flowchart LR
+  A[Start] -- "quoted label" --> B[Check]
+  B -. "retry (max 3)" .-> A
+  B == "a<br/>b" ==> C[Done]
+  subgraph "Quoted checks"
+    D[lint] -- "go vet (strict)" --> E[test]
+  end
+  C --> D

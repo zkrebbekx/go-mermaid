@@ -64,7 +64,8 @@ func (p *parser) parse() (*domain.Graph, error) {
 func (p *parser) parseSubgraph() {
 	p.next() // subgraph
 	sg := &domain.Subgraph{}
-	if p.at(lexer.Ident) {
+	if p.at(lexer.Ident) || p.at(lexer.Text) {
+		// A quoted title, as in `subgraph "Two words"`, doubles as the ID.
 		sg.ID = p.cur().Val
 		sg.Title = sg.ID
 		p.next()

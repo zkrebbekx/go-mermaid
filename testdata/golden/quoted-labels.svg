@@ -1,0 +1,32 @@
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="589.16" height="122" viewBox="0 0 589.16 122" font-family="sans-serif" font-size="14">
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker></defs>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g transform="translate(16,40)">
+    <rect x="358.7" y="-24" width="198.46" height="90" fill="none" stroke="#9370DB" stroke-dasharray="4,3" rx="4"/>
+    <text x="364.7" y="-10" fill="#333333">Quoted checks</text>
+    <path d="M69.57,14 L119.57,14" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="53.43" y="0" width="82.27" height="18" fill="#ffffff"/>
+    <text x="94.57" y="14" fill="#333333" text-anchor="middle" dy="-2">quoted label</text>
+    <path d="M119.57,48 L69.57,48" fill="none" stroke="#333333" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)"/>
+    <rect x="51.9" y="34" width="85.34" height="18" fill="#ffffff"/>
+    <text x="94.57" y="48" fill="#333333" text-anchor="middle" dy="-2">retry (max 3)</text>
+    <path d="M199.24,31 L249.24,31" fill="none" stroke="#333333" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="217.35" y="3" width="13.78" height="32" fill="#ffffff"/>
+    <text x="224.24" y="17" fill="#333333" text-anchor="middle" dy="-2">a</text>
+    <text x="224.24" y="31" fill="#333333" text-anchor="middle" dy="-2">b</text>
+    <path d="M430.6,31 L480.6,31" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="412.14" y="17" width="86.91" height="18" fill="#ffffff"/>
+    <text x="455.6" y="31" fill="#333333" text-anchor="middle" dy="-2">go vet (strict)</text>
+    <path d="M322.7,31 L372.7,31" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="0" y="10" width="69.57" height="42" fill="#ECECFF" stroke="#9370DB"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="34.78" y="35.9">Start</tspan></text>
+    <rect x="119.57" y="10" width="79.68" height="42" fill="#ECECFF" stroke="#9370DB"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="159.41" y="35.9">Check</tspan></text>
+    <rect x="249.24" y="10" width="73.46" height="42" fill="#ECECFF" stroke="#9370DB"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="285.97" y="35.9">Done</tspan></text>
+    <rect x="372.7" y="10" width="57.89" height="42" fill="#ECECFF" stroke="#9370DB"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="401.65" y="35.9">lint</tspan></text>
+    <rect x="480.6" y="10" width="62.57" height="42" fill="#ECECFF" stroke="#9370DB"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="511.88" y="35.9">test</tspan></text>
+  </g>
+</svg>

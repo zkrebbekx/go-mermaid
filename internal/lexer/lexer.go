@@ -54,6 +54,12 @@ func (l *lexer) run() ([]Token, error) {
 				return nil, err
 			}
 			toks = append(toks, tok...)
+		case r == '"':
+			tok, err := l.lexQuoted()
+			if err != nil {
+				return nil, err
+			}
+			toks = append(toks, tok)
 		case isShapeOpen(r):
 			tok, err := l.lexShape()
 			if err != nil {
@@ -171,6 +177,27 @@ func (l *lexer) lexPipeLabel() ([]Token, error) {
 		{Kind: Text, Val: stripQuotes(text), Line: l.line, Col: col + 1},
 		{Kind: Pipe, Val: "|", Line: l.line, Col: l.col - 1},
 	}, nil
+}
+
+// lexQuoted captures a "quoted string" outside a shape or pipe label, as in
+// the middle-form edge label A -- "text" --> B. Delimiters inside the quotes,
+// such as parentheses, are kept as text.
+func (l *lexer) lexQuoted() (Token, error) {
+	line, col := l.line, l.col
+	l.advance() // opening "
+	start := l.pos
+	for l.pos < len(l.src) && l.src[l.pos] != '"' {
+		if l.src[l.pos] == '\n' {
+			return Token{}, syntax.Errorf(line, col, "unterminated string")
+		}
+		l.advance()
+	}
+	if l.pos >= len(l.src) {
+		return Token{}, syntax.Errorf(line, col, "unterminated string")
+	}
+	text := string(l.src[start:l.pos])
+	l.advance() // closing "
+	return Token{Kind: Text, Val: text, Line: line, Col: col}, nil
 }
 
 // shapeOpeners lists opening delimiters, longest first so the longest match
