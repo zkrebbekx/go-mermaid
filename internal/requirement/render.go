@@ -33,7 +33,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 		g.Nodes = append(g.Nodes, node)
 	}
 	for _, r := range d.Rels {
-		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: r.Type})
+		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: relLabel(r)})
 	}
 	res, err := layout.Compute(g, layout.Options{NodeSep: 55, RankSep: 100, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
@@ -66,7 +66,7 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 	b.WriteByte('\n')
 
 	for i, r := range d.Rels {
-		writeRel(&b, r, g.Edges[i], pal)
+		writeRel(&b, r, g.Edges[i], pal, o)
 	}
 	for _, n := range d.Nodes {
 		writeNode(&b, n, g.NodeByID(n.ID), pal, o)
@@ -161,7 +161,7 @@ func writeNode(b *strings.Builder, n *Node, dn *domain.Node, pal theme.Palette, 
 	}
 }
 
-func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette) {
+func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette, o RenderOptions) {
 	if len(e.Points) < 2 {
 		return
 	}
@@ -178,10 +178,20 @@ func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette) {
 	b.WriteByte('\n')
 	if r.Type != "" {
 		mid := e.LabelPos
+		svgutil.LabelBackground(b, relLabel(r), mid.X, mid.Y, svgutil.FaceFor(o.FontFace), o.FontSize, pal.Background)
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
-			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc("«"+r.Type+"»"))
+			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(relLabel(r)))
 		b.WriteByte('\n')
 	}
+}
+
+// relLabel is the text drawn on a relationship edge, or "" for none. Layout
+// sizes the label from it, so it must match what writeRel draws.
+func relLabel(r *Rel) string {
+	if r.Type == "" {
+		return ""
+	}
+	return "«" + r.Type + "»"
 }
 
 func nodeSize(n *Node, face svgutil.Face, fontSize float64) domain.Size {

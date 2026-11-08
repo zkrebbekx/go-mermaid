@@ -148,22 +148,12 @@ func writeEdge(b *strings.Builder, e *domain.Edge, pal theme.Palette, curved boo
 	b.WriteByte('\n')
 
 	if e.Label != "" {
-		// Layout anchors the label on the routed path and staggers labels
-		// of parallel edges so they never paint over each other. LabelPos is
-		// the baseline of the last line, so a multi-line label grows upward.
+		// Layout reserves room for every label, so none paints over a node
+		// or another label. LabelPos is the baseline of the last line, so a
+		// multi-line label grows upward.
 		midX, midY := e.LabelPos.X, e.LabelPos.Y
 		lines := svgutil.SplitLines(e.Label)
-		tw := 0.0
-		for _, ln := range lines {
-			if lw := face.Width(ln, fontSize); lw > tw {
-				tw = lw
-			}
-		}
-		tw += 6
-		th := fontSize * float64(len(lines))
-		fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>`,
-			num(midX-tw/2), num(midY-th), num(tw), num(th+4), pal.Background)
-		b.WriteByte('\n')
+		svgutil.LabelBackground(b, e.Label, midX, midY, face, fontSize, pal.Background)
 		for i, ln := range lines {
 			y := midY - fontSize*float64(len(lines)-1-i)
 			fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,

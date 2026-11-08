@@ -29,8 +29,8 @@ type Edge struct {
 	// any bend points. Empty until layout runs.
 	Points []Point
 
-	// LabelPos is the anchor for the edge label on the routed path. Layout
-	// sets it to the path midpoint, or to a staggered position when several
-	// edges join the same node pair and their labels would otherwise overlap.
+	// LabelPos is the baseline anchor of the edge label's last line. Layout
+	// reserves room for each label and places it on the routed path, or just
+	// outside the loop for a self-edge.
 	LabelPos Point
 }

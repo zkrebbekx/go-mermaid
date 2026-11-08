@@ -195,6 +195,23 @@ func SplitLines(s string) []string {
 	return strings.Split(s, "\n")
 }
 
+// LabelBackground writes the background box behind an edge label, so the
+// edge line does not run through the text. (x, y) is the label anchor: the
+// horizontal centre and the baseline of its last line, with lines split as
+// SplitLines does. Layout reserves exactly this box for every edge label.
+func LabelBackground(b *strings.Builder, label string, x, y float64, face Face, fontSize float64, fill string) {
+	lines := SplitLines(label)
+	w := 0.0
+	for _, ln := range lines {
+		w = max(w, face.Width(ln, fontSize))
+	}
+	w += 6
+	h := fontSize * float64(len(lines))
+	fmt.Fprintf(b, `    <rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>`,
+		Num(x-w/2), Num(y-h), Num(w), Num(h+4), fill)
+	b.WriteByte('\n')
+}
+
 // MultilineText writes a centered <text> element whose lines are vertically
 // centered around center. extraAttrs is inserted into the <text> tag (e.g.
 // ` font-weight="bold"`).

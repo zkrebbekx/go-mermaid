@@ -79,10 +79,7 @@ func TestParallelEdgeLabels(t *testing.T) {
 			Convey("Then each label sits on its own edge", func() {
 				So(err, ShouldBeNil)
 				for _, e := range g.Edges {
-					So(e.LabelPos.X, ShouldEqual, e.Points[0].X)
-					lo := math.Min(e.Points[0].Y, e.Points[1].Y)
-					hi := math.Max(e.Points[0].Y, e.Points[1].Y)
-					So(e.LabelPos.Y, ShouldBeBetween, lo, hi)
+					So(onPolyline(labelCentre(e), e.Points), ShouldBeTrue)
 				}
 			})
 
@@ -108,14 +105,13 @@ func TestParallelEdgeLabels(t *testing.T) {
 		Convey("When computing the layout", func() {
 			_, err := Compute(g, opts)
 
-			Convey("Then the labels already clear each other and stay side by side at the midpoint", func() {
+			Convey("Then the labels clear each other and each sits on its own edge", func() {
 				So(err, ShouldBeNil)
 				r0, _ := labelRect(g.Edges[0], opts.face(), opts.FontSize)
 				r1, _ := labelRect(g.Edges[1], opts.face(), opts.FontSize)
 				So(overlaps(r0, r1), ShouldBeFalse)
 				for _, e := range g.Edges {
-					mid := domain.PolylineMidpoint(e.Points)
-					So(e.LabelPos, ShouldResemble, mid)
+					So(onPolyline(labelCentre(e), e.Points), ShouldBeTrue)
 				}
 			})
 		})
@@ -146,10 +142,10 @@ func TestParallelEdgeLabels(t *testing.T) {
 		Convey("When computing the layout", func() {
 			_, err := Compute(g, opts)
 
-			Convey("Then the label anchors on the routed path midpoint", func() {
+			Convey("Then the label is centred on the routed path", func() {
 				So(err, ShouldBeNil)
 				e := g.Edges[0]
-				So(e.LabelPos, ShouldResemble, domain.PolylineMidpoint(e.Points))
+				So(onPolyline(labelCentre(e), e.Points), ShouldBeTrue)
 			})
 		})
 	})

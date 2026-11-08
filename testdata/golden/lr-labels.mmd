@@ -1,0 +1,3 @@
+flowchart LR
+  A[Client] -->|signed token| B[Gateway] --> C[Authorizer]
+  C -->|"new route<br/>(field dropped)"| D[Handler]

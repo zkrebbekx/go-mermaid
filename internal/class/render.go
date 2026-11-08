@@ -215,6 +215,7 @@ func writeRelation(b *strings.Builder, r *Relation, e *domain.Edge, pal theme.Pa
 
 	if r.Label != "" {
 		mid := e.LabelPos
+		svgutil.LabelBackground(b, r.Label, mid.X, mid.Y, svgutil.FaceFor(o.FontFace), o.FontSize, pal.Background)
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
 			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(r.Label))
 		b.WriteByte('\n')

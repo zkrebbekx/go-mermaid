@@ -48,7 +48,7 @@ func Render(src string, o RenderOptions) ([]byte, error) {
 		g.Nodes = append(g.Nodes, n)
 	}
 	for _, r := range d.Rels {
-		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: r.Label})
+		g.Edges = append(g.Edges, &domain.Edge{From: r.From, To: r.To, Label: relLabel(r)})
 	}
 	res, err := layout.Compute(g, layout.Options{NodeSep: 60, RankSep: 100, FontSize: o.FontSize, FontFace: o.FontFace})
 	if err != nil {
@@ -134,19 +134,38 @@ func writeRel(b *strings.Builder, r *Rel, e *domain.Edge, pal theme.Palette, o R
 	fmt.Fprintf(b, `    <path d="%s" fill="none" stroke="%s" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>`,
 		strings.TrimSpace(d.String()), pal.Edge)
 	b.WriteByte('\n')
-	if r.Tech != "" {
+	if lbl := relLabel(r); lbl != "" {
+		// LabelPos is the baseline of the last line: the tech line when
+		// there is one, with the label one line above it.
 		mid := e.LabelPos
-		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" font-size="%s">%s</text>`,
-			svgutil.Num(mid.X), svgutil.Num(mid.Y+o.FontSize), pal.Text,
-			svgutil.Num(o.FontSize-2), svgutil.Esc("["+r.Tech+"]"))
-		b.WriteByte('\n')
+		svgutil.LabelBackground(b, lbl, mid.X, mid.Y, svgutil.FaceFor(o.FontFace), o.FontSize, pal.Background)
+		labelY := mid.Y
+		if r.Tech != "" {
+			fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2" font-size="%s">%s</text>`,
+				svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text,
+				svgutil.Num(o.FontSize-2), svgutil.Esc("["+r.Tech+"]"))
+			b.WriteByte('\n')
+			labelY -= o.FontSize
+		}
+		if r.Label != "" {
+			fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
+				svgutil.Num(mid.X), svgutil.Num(labelY), pal.Text, svgutil.Esc(r.Label))
+			b.WriteByte('\n')
+		}
 	}
+}
+
+// relLabel is the text drawn on a relationship edge: the label, then the
+// technology on a second line. Layout sizes the label box from it.
+func relLabel(r *Rel) string {
+	lines := make([]string, 0, 2)
 	if r.Label != "" {
-		mid := e.LabelPos
-		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
-			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(r.Label))
-		b.WriteByte('\n')
+		lines = append(lines, r.Label)
 	}
+	if r.Tech != "" {
+		lines = append(lines, "["+r.Tech+"]")
+	}
+	return strings.Join(lines, "\n")
 }
 
 func elementSize(e *Element, face svgutil.Face, fontSize float64) domain.Size {

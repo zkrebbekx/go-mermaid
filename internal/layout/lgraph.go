@@ -1,6 +1,7 @@
 package layout
 
 import (
+	"math"
 	"sort"
 
 	"github.com/zkrebbekx/go-mermaid/internal/domain"
@@ -16,6 +17,16 @@ type lnode struct {
 	cross float64 // coordinate along the cross axis (set by positioning)
 	pc    float64 // center along the primary/rank axis (set by positioning)
 	w, h  float64 // domain box size (0 for dummies)
+
+	// label is the edge whose label this dummy holds; its w, h are the label
+	// box, so positioning reserves room for the text like any other node.
+	label *domain.Edge
+	// loops counts the node's self-loops, which nest one inside the next.
+	// loop bounds their labels, stacked in a column beside the outermost
+	// loop: the widest label by the sum of their heights. Positioning keeps
+	// room for both.
+	loops int
+	loop  domain.Size
 }
 
 // lgraph is the layered working graph: nodes bucketed by rank, with up/down
@@ -25,6 +36,8 @@ type lgraph struct {
 	ups    map[*lnode][]*lnode // neighbors one rank up
 	downs  map[*lnode][]*lnode // neighbors one rank down
 	chains map[*domain.Edge][]*lnode
+	// loopIdx is a self-loop's nesting depth on its node, 0 for the innermost.
+	loopIdx map[*domain.Edge]int
 
 	// cluster maps a node to the subgraph it belongs to, empty when it is
 	// outside every subgraph. Ordering keeps a cluster's members together.
@@ -33,7 +46,11 @@ type lgraph struct {
 
 // buildLGraph buckets nodes by rank and inserts dummies along edges that span
 // multiple ranks. Self-edges keep a two-element chain and are routed specially.
-func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
+//
+// A labelled edge's middle dummy takes the size of its label, so ranking gaps
+// and cross spacing make room for the text. Compute doubles the ranks of any
+// graph with a labelled edge, so every such edge has a middle rank.
+func buildLGraph(g *domain.Graph, ranks map[string]int, opts Options) *lgraph {
 	maxRank := 0
 	for _, r := range ranks {
 		if r > maxRank {
@@ -45,6 +62,7 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 		ups:     map[*lnode][]*lnode{},
 		downs:   map[*lnode][]*lnode{},
 		chains:  map[*domain.Edge][]*lnode{},
+		loopIdx: map[*domain.Edge]int{},
 		cluster: map[*lnode]string{},
 	}
 
@@ -76,6 +94,15 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 		if from == nil || to == nil {
 			continue
 		}
+		if e.From == e.To {
+			lg.loopIdx[e] = from.loops
+			from.loops++
+			if e.Label != "" {
+				sz := labelSize(e.Label, opts.face(), opts.FontSize)
+				from.loop.W = math.Max(from.loop.W, sz.W)
+				from.loop.H += sz.H
+			}
+		}
 		chain := []*lnode{from}
 		if to.rank > from.rank+1 {
 			prev := from
@@ -85,8 +112,16 @@ func buildLGraph(g *domain.Graph, ranks map[string]int) *lgraph {
 			if c := nodeCluster[e.From]; c != "" && c == nodeCluster[e.To] {
 				dummyCluster = c
 			}
+			mid := -1
+			if e.Label != "" {
+				mid = from.rank + (to.rank-from.rank)/2
+			}
 			for r := from.rank + 1; r < to.rank; r++ {
 				d := &lnode{rank: r, w: 1}
+				if r == mid {
+					sz := labelSize(e.Label, opts.face(), opts.FontSize)
+					d.w, d.h, d.label = sz.W, sz.H, e
+				}
 				if dummyCluster != "" {
 					lg.cluster[d] = dummyCluster
 				}

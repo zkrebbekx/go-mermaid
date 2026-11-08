@@ -1,21 +1,23 @@
-<svg role="img" xmlns="http://www.w3.org/2000/svg" width="101.12" height="498" viewBox="0 0 101.12 498" font-family="sans-serif" font-size="14">
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="142.69" height="516" viewBox="0 0 142.69 516" font-family="sans-serif" font-size="14">
   <defs><marker id="st-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker></defs>
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
-    <path d="M34.56,18 L34.56,103" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <path d="M17.56,133 L17.56,218" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <text x="17.56" y="194.67" fill="#333333" text-anchor="middle" dy="-2">start</text>
-    <path d="M51.56,218 L51.56,133" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <text x="51.56" y="166.33" fill="#333333" text-anchor="middle" dy="-2">stop</text>
-    <path d="M34.56,248 L34.56,333" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <path d="M34.56,363 L34.56,448" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
-    <circle cx="34.56" cy="9" r="7" fill="#333333"/>
-    <rect x="9.56" y="103" width="50" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
-    <text x="34.56" y="122.9" fill="#333333" text-anchor="middle">Still</text>
-    <rect x="0" y="218" width="69.12" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
-    <text x="34.56" y="237.9" fill="#333333" text-anchor="middle">Moving</text>
-    <rect x="3.89" y="333" width="61.34" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
-    <text x="34.56" y="352.9" fill="#333333" text-anchor="middle">Crash</text>
-    <circle cx="34.56" cy="457" r="8" fill="#ffffff" stroke="#333333"/><circle cx="34.56" cy="457" r="4" fill="#333333"/>
+    <path d="M55.54,18 L55.54,60.5 L55.54,103" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <path d="M47.2,133 L47.2,154.25 L16.62,154.25 L16.62,184.5 L16.62,214.75 L44.02,214.75 L44.02,236" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <rect x="0" y="175.5" width="33.23" height="18" fill="#ffffff"/>
+    <text x="16.62" y="189.5" fill="#333333" text-anchor="middle" dy="-2">start</text>
+    <path d="M67.06,236 L67.06,214.75 L94.46,214.75 L94.46,184.5 L94.46,154.25 L63.87,154.25 L63.87,133" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <rect x="78.23" y="175.5" width="32.46" height="18" fill="#ffffff"/>
+    <text x="94.46" y="189.5" fill="#333333" text-anchor="middle" dy="-2">stop</text>
+    <path d="M55.54,266 L55.54,308.5 L55.54,351" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <path d="M55.54,381 L55.54,423.5 L55.54,466" fill="none" stroke="#333333" marker-end="url(#st-arrow)"/>
+    <circle cx="55.54" cy="9" r="7" fill="#333333"/>
+    <rect x="30.54" y="103" width="50" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="55.54" y="122.9" fill="#333333" text-anchor="middle">Still</text>
+    <rect x="20.98" y="236" width="69.12" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="55.54" y="255.9" fill="#333333" text-anchor="middle">Moving</text>
+    <rect x="24.87" y="351" width="61.34" height="30" rx="8" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="55.54" y="370.9" fill="#333333" text-anchor="middle">Crash</text>
+    <circle cx="55.54" cy="475" r="8" fill="#ffffff" stroke="#333333"/><circle cx="55.54" cy="475" r="4" fill="#333333"/>
   </g>
 </svg>

@@ -1,12 +1,15 @@
 // Package layout assigns coordinates to a domain.Graph using a layered
 // (Sugiyama-style) approach: make the graph acyclic, rank nodes into layers,
 // insert dummy nodes so long edges can bend, order within layers to reduce
-// crossings, then assign positions with a barycenter heuristic. Ranking is
+// crossings, then assign positions with a barycenter heuristic. A labelled
+// edge's middle dummy is sized to its label, so every stage reserves room for
+// the text the way it does for nodes. Ranking is
 // longest-path; network-simplex can replace it behind the same interface.
 package layout
 
 import (
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/zkrebbekx/go-mermaid/internal/domain"
@@ -41,23 +44,57 @@ func Compute(g *domain.Graph, opts Options) (*Result, error) {
 	reversed := makeAcyclic(g)
 	ranks := assignRanks(g)
 
-	lg := buildLGraph(g, ranks)
+	// Give every labelled edge a middle rank for its label dummy. Halving the
+	// gap keeps the distance between real ranks unchanged when that middle
+	// rank holds no label.
+	popts := opts
+	labelled := hasEdgeLabels(g)
+	if labelled {
+		for id := range ranks {
+			ranks[id] *= 2
+		}
+		popts.RankSep /= 2
+	}
+
+	lg := buildLGraph(g, ranks, opts)
 	reduceCrossings(lg)
-	totalPrimary := positionLG(lg, g.Direction, opts)
+	totalPrimary := positionLG(lg, g.Direction, popts)
 
 	writeBackNodes(lg, g, totalPrimary)
 	// Restore original edge directions before routing so arrowheads point the
 	// right way on edges that were reversed to break cycles.
 	restoreReversed(g, reversed)
-	routeEdges(lg, g, totalPrimary)
-	vertical := g.Direction == domain.TopBottom || g.Direction == domain.BottomTop
-	separateParallel(g)
-	spreadPorts(g, vertical)
-	placeLabels(g, vertical, opts)
+	anchored := routeEdges(lg, g, totalPrimary)
+	vertical := isVertical(g.Direction)
+	// Edges that join the same node pair share one path unless each has its
+	// own dummy, which is always so once ranks are doubled.
+	var parallel [][]*domain.Edge
+	if !labelled {
+		parallel = parallelGroups(g)
+	}
+	separateParallel(g, parallel)
+	spreadPorts(g, vertical, parallel, anchored, opts)
+	dropRepeats(g)
+	placeLabels(g, anchored, vertical, opts)
 	normalizeOrigin(g, opts)
 
 	w, h := bounds(g, opts)
 	return &Result{Graph: g, Width: w, Height: h}, nil
+}
+
+func isVertical(dir domain.Direction) bool {
+	return dir == domain.TopBottom || dir == domain.BottomTop
+}
+
+// hasEdgeLabels reports whether any edge between two distinct nodes carries
+// a label. Self-loop labels sit beside their node and need no rank.
+func hasEdgeLabels(g *domain.Graph) bool {
+	for _, e := range g.Edges {
+		if e.Label != "" && e.From != e.To {
+			return true
+		}
+	}
+	return false
 }
 
 // parallelSep is the perpendicular distance between edges that join the same
@@ -118,11 +155,11 @@ func pairAxis(g *domain.Graph, e *domain.Edge) (ax, ay float64, ok bool) {
 	return (cb.X - ca.X) / d, (cb.Y - ca.Y) / d, true
 }
 
-// separateParallel offsets edges that share the same node pair perpendicular
-// to the pair axis, so overlapping lines (e.g. A->B and B->A) don't sit on
-// top of each other.
-func separateParallel(g *domain.Graph) {
-	for _, es := range parallelGroups(g) {
+// separateParallel offsets each group of edges that share a node pair
+// perpendicular to the pair axis, so overlapping lines (e.g. A->B and B->A)
+// don't sit on top of each other.
+func separateParallel(g *domain.Graph, groups [][]*domain.Edge) {
+	for _, es := range groups {
 		ax, ay, ok := pairAxis(g, es[0])
 		if !ok {
 			continue
@@ -134,6 +171,8 @@ func separateParallel(g *domain.Graph) {
 				e.Points[j].X += px * off
 				e.Points[j].Y += py * off
 			}
+			e.LabelPos.X += px * off
+			e.LabelPos.Y += py * off
 		}
 	}
 }
@@ -165,76 +204,78 @@ func labelRect(e *domain.Edge, face svgutil.Face, fontSize float64) (domain.Rect
 	}, true
 }
 
-// placeLabels sets LabelPos on every edge. A lone edge anchors its label at
-// the midpoint of its path. Edges that share a node pair run parallelSep
-// apart; when their labels are wider than that gap along the perpendicular
-// axis, the labels are staggered along the path instead so none paints over
-// another.
-func placeLabels(g *domain.Graph, vertical bool, opts Options) {
-	for _, e := range g.Edges {
-		e.LabelPos = domain.PolylineMidpoint(e.Points)
+// labelGap is the clear space between a label box and the line it labels.
+const labelGap = 4.0
+
+// placeLabels sets LabelPos on every edge. LabelPos is the baseline of the
+// label's last line (see labelRect). An edge routed through a label dummy
+// already holds that dummy's centre, which positioning kept clear of other
+// nodes and labels. Self-loop labels stack in a column just outside the
+// outermost loop on their node. Any other edge anchors its label at the
+// midpoint of its path.
+func placeLabels(g *domain.Graph, anchored map[*domain.Edge]bool, vertical bool, opts Options) {
+	baseline := func(c domain.Point, sz domain.Size) domain.Point {
+		return domain.Point{X: c.X, Y: c.Y + sz.H/2 - 4}
 	}
-	for _, es := range parallelGroups(g) {
-		var labeled []*domain.Edge
-		for _, e := range es {
-			if e.Label != "" && len(e.Points) >= 2 {
-				labeled = append(labeled, e)
+	type column struct {
+		outer  float64 // far side of the outermost loop on the cross axis
+		height float64 // total height of the stacked labels
+		edges  []*domain.Edge
+	}
+	cols := map[string]*column{}
+	var order []string
+	for _, e := range g.Edges {
+		switch {
+		case e.Label == "" || len(e.Points) == 0:
+			e.LabelPos = domain.PolylineMidpoint(e.Points)
+		case anchored[e]:
+			e.LabelPos = baseline(e.LabelPos, labelSize(e.Label, opts.face(), opts.FontSize))
+		case e.From == e.To && len(e.Points) == 4:
+			col, ok := cols[e.From]
+			if !ok {
+				col = &column{outer: math.Inf(-1)}
+				cols[e.From] = col
+				order = append(order, e.From)
+			}
+			col.edges = append(col.edges, e)
+			col.height += labelSize(e.Label, opts.face(), opts.FontSize).H
+		default:
+			e.LabelPos = domain.PolylineMidpoint(e.Points)
+		}
+	}
+	if len(cols) == 0 {
+		return
+	}
+	// Unlabelled loops nest too, so the outermost may carry no label.
+	for _, e := range g.Edges {
+		if col := cols[e.From]; col != nil && e.From == e.To && len(e.Points) == 4 {
+			if vertical {
+				col.outer = math.Max(col.outer, e.Points[1].X)
+			} else {
+				col.outer = math.Max(col.outer, e.Points[1].Y)
 			}
 		}
-		if len(labeled) < 2 || !labelsCollide(labeled, vertical, opts.face(), opts.FontSize) {
+	}
+	for _, id := range order {
+		col, n := cols[id], g.NodeByID(id)
+		if n == nil {
 			continue
 		}
-		staggerLabels(labeled, vertical, opts.face(), opts.FontSize)
-	}
-}
-
-// labelsCollide reports whether two adjacent labels in a parallel group would
-// overlap when both sit at the same distance along their edges. Only the
-// label extent across the edges matters: width for vertical edges, height for
-// horizontal ones.
-func labelsCollide(es []*domain.Edge, vertical bool, face svgutil.Face, fontSize float64) bool {
-	const gap = 4.0
-	extent := func(e *domain.Edge) float64 {
-		sz := labelSize(e.Label, face, fontSize)
-		if vertical {
-			return sz.W
+		nc := n.Center()
+		// Labels run down from the top of the column, which is centred on
+		// the node in TD and starts just below the loops in LR.
+		at := nc.Y - col.height/2
+		if !vertical {
+			at = col.outer + labelGap
 		}
-		return sz.H
-	}
-	for i := 1; i < len(es); i++ {
-		if (extent(es[i-1])+extent(es[i]))/2+gap > parallelSep {
-			return true
-		}
-	}
-	return false
-}
-
-// staggerLabels spreads the labels of a parallel group along the path. The
-// positions are measured in one shared frame (from the lower-ID node), so
-// opposite-direction edges still get distinct slots. Slots are centered on
-// the path midpoint and at least one label height apart. On vertical edges
-// the anchor is nudged down so the label box, which extends mostly above
-// the anchor, is centered in its slot.
-func staggerLabels(es []*domain.Edge, vertical bool, face svgutil.Face, fontSize float64) {
-	const gap = 4.0
-	boxH := fontSize + 4
-	for _, e := range es {
-		if h := labelSize(e.Label, face, fontSize).H; h > boxH {
-			boxH = h
-		}
-	}
-	n := float64(len(es))
-	for i, e := range es {
-		length := domain.PolylineLength(e.Points)
-		step := math.Max(length/(n+1), boxH+gap)
-		at := length/2 + (float64(i)-(n-1)/2)*step
-		at = math.Max(0, math.Min(length, at))
-		if e.From > e.To {
-			at = length - at
-		}
-		e.LabelPos = domain.PolylinePointAt(e.Points, at)
-		if vertical {
-			e.LabelPos.Y += fontSize - boxH/2
+		for _, e := range col.edges {
+			sz := labelSize(e.Label, opts.face(), opts.FontSize)
+			c := domain.Point{X: nc.X, Y: at + sz.H/2}
+			if vertical {
+				c.X = col.outer + labelGap + sz.W/2
+			}
+			e.LabelPos = baseline(c, sz)
+			at += sz.H
 		}
 	}
 }
@@ -277,38 +318,43 @@ func normalizeOrigin(g *domain.Graph, opts Options) {
 // spreadPorts fans out the attach points of edges that meet a node on the same
 // face, so multiple edges (and their arrowheads) don't pile up at the box
 // center. Endpoints are distributed evenly along the face and ordered by their
-// far end to avoid introducing crossings; the adjacent elbow shifts with each
-// endpoint so the connecting segment stays orthogonal.
-func spreadPorts(g *domain.Graph, vertical bool) {
+// far end to avoid introducing crossings; see shiftPort for how each path
+// follows its endpoint. Edges in parallel groups are left alone, since
+// separateParallel already fanned them out wider. anchored holds the edges
+// whose LabelPos is still the centre of their label dummy.
+func spreadPorts(g *domain.Graph, vertical bool, parallel [][]*domain.Edge, anchored map[*domain.Edge]bool, opts Options) {
 	type touch struct {
-		e   *domain.Edge
-		idx int // index of the endpoint touching this node
+		e    *domain.Edge
+		last bool // the edge's last point touches this node, not its first
 	}
-	// Edges that share a node pair are already fanned out by separateParallel;
-	// leaving them out here keeps that wider spacing intact.
-	pairKey := func(a, b string) string {
-		if a < b {
-			return a + "\x00" + b
-		}
-		return b + "\x00" + a
-	}
-	pairCount := map[string]int{}
-	for _, e := range g.Edges {
-		if e.From != e.To {
-			pairCount[pairKey(e.From, e.To)]++
+	separated := map[*domain.Edge]bool{}
+	for _, es := range parallel {
+		for _, e := range es {
+			separated[e] = true
 		}
 	}
 	byNode := map[string][]touch{}
 	for _, e := range g.Edges {
-		// Need a real interior elbow (>=4 points): the shift moves the endpoint
-		// and the adjacent elbow only. With <4 points the "adjacent" index is the
-		// far endpoint, so spreading would drag the other node's attach point and
-		// the two ends would fight over a shared index (order-dependent output).
-		if e.From == e.To || len(e.Points) < 4 || pairCount[pairKey(e.From, e.To)] > 1 {
+		// A two-point edge has no interior point to bend at: moving one end
+		// would drag the other node's attach point with it.
+		if e.From == e.To || len(e.Points) < 3 || separated[e] {
 			continue
 		}
-		byNode[e.From] = append(byNode[e.From], touch{e, 0})
-		byNode[e.To] = append(byNode[e.To], touch{e, len(e.Points) - 1})
+		byNode[e.From] = append(byNode[e.From], touch{e, false})
+		byNode[e.To] = append(byNode[e.To], touch{e, true})
+	}
+	// Ends are looked up on use: a jog inserted at one end shifts the other.
+	end := func(t touch) domain.Point {
+		if t.last {
+			return t.e.Points[len(t.e.Points)-1]
+		}
+		return t.e.Points[0]
+	}
+	far := func(t touch) domain.Point {
+		if t.last {
+			return t.e.Points[0]
+		}
+		return t.e.Points[len(t.e.Points)-1]
 	}
 	// Iterate nodes in a stable order so output never depends on map iteration.
 	ids := make([]string, 0, len(byNode))
@@ -325,7 +371,7 @@ func spreadPorts(g *domain.Graph, vertical bool) {
 		c := n.Center()
 		faces := map[bool][]touch{}
 		for _, t := range ts {
-			p := t.e.Points[t.idx]
+			p := end(t)
 			pos := p.Y >= c.Y
 			if !vertical {
 				pos = p.X >= c.X
@@ -336,12 +382,6 @@ func spreadPorts(g *domain.Graph, vertical bool) {
 			if len(grp) < 2 {
 				continue
 			}
-			far := func(t touch) domain.Point {
-				if t.idx == 0 {
-					return t.e.Points[len(t.e.Points)-1]
-				}
-				return t.e.Points[0]
-			}
 			sort.SliceStable(grp, func(i, j int) bool {
 				if vertical {
 					return far(grp[i]).X < far(grp[j]).X
@@ -350,28 +390,93 @@ func spreadPorts(g *domain.Graph, vertical bool) {
 			})
 			for k, t := range grp {
 				frac := float64(k+1) / float64(len(grp)+1)
-				var port, cur float64
+				port := n.Pos.Y + n.Size.H*frac
 				if vertical {
 					port = n.Pos.X + n.Size.W*frac
-					cur = t.e.Points[t.idx].X
-				} else {
-					port = n.Pos.Y + n.Size.H*frac
-					cur = t.e.Points[t.idx].Y
 				}
-				delta := port - cur
-				adj := t.idx + 1
-				if t.idx != 0 {
-					adj = t.idx - 1
+				var inset float64
+				if anchored[t.e] {
+					sz := labelSize(t.e.Label, opts.face(), opts.FontSize)
+					inset = sz.H / 2
+					if !vertical {
+						inset = sz.W / 2
+					}
 				}
-				if vertical {
-					t.e.Points[t.idx].X += delta
-					t.e.Points[adj].X += delta
-				} else {
-					t.e.Points[t.idx].Y += delta
-					t.e.Points[adj].Y += delta
-				}
+				shiftPort(t.e, t.last, port, vertical, inset)
 			}
 		}
+	}
+}
+
+// shiftPort moves one end of e to port along the node face. When the point
+// next to the end is an elbow, it moves too and the path stays orthogonal.
+// When the path runs straight on through it (a dummy, such as a label
+// anchor), a jog is inserted halfway instead so the rest of the path, and the
+// label on it, stays put. If that dummy is e's label, inset is half the
+// label's extent along the path, and the jog goes halfway to the label's edge
+// rather than its centre so the label never hides it.
+func shiftPort(e *domain.Edge, last bool, port float64, vertical bool, inset float64) {
+	pts := e.Points
+	if last {
+		pts = slices.Clone(pts)
+		slices.Reverse(pts)
+	}
+	primary := func(p domain.Point) float64 {
+		if vertical {
+			return p.Y
+		}
+		return p.X
+	}
+	cur := pts[0].Y
+	if vertical {
+		cur = pts[0].X
+	}
+	if cur == port {
+		return
+	}
+	set := func(p *domain.Point, v float64) {
+		if vertical {
+			p.X = v
+		} else {
+			p.Y = v
+		}
+	}
+	// An elbow turns onto the cross axis, so the segment after it keeps the
+	// same primary coordinate.
+	if primary(pts[1]) == primary(pts[2]) {
+		set(&pts[0], port)
+		set(&pts[1], port)
+	} else {
+		mid := pts[1]
+		if !(inset > 0 && pts[1] == e.LabelPos) {
+			inset = 0
+		}
+		a, b := primary(pts[0]), primary(pts[1])
+		if b < a {
+			inset = -inset
+		}
+		jog := (a + b - inset) / 2
+		if vertical {
+			mid.Y = jog
+		} else {
+			mid.X = jog
+		}
+		near := mid
+		set(&near, port)
+		set(&pts[0], port)
+		pts = slices.Insert(pts, 1, near, mid)
+	}
+	if last {
+		slices.Reverse(pts)
+	}
+	e.Points = pts
+}
+
+// dropRepeats removes consecutive duplicate points from every edge. Moving a
+// port onto the next bend can leave a zero-length segment behind.
+func dropRepeats(g *domain.Graph) {
+	for _, e := range g.Edges {
+		e.Points = slices.Compact(e.Points)
 	}
 }
 
@@ -443,22 +548,30 @@ func writeBackNodes(lg *lgraph, g *domain.Graph, totalPrimary float64) {
 // routeEdges builds each edge's polyline through its dummy chain, clipping the
 // first and last segments to the node boundaries so arrowheads land on the
 // box edge. Self-edges are routed as a small loop beside the node.
-func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) {
+//
+// An edge routed through a label dummy gets that dummy's centre in LabelPos,
+// and is reported in the returned set; placeLabels finishes the anchor.
+func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) map[*domain.Edge]bool {
+	anchored := map[*domain.Edge]bool{}
+	vertical := isVertical(g.Direction)
 	for _, e := range g.Edges {
 		chain := lg.chains[e]
 		if len(chain) < 2 {
 			continue
 		}
 		if e.From == e.To {
-			e.Points = selfLoop(chain[0], g.Direction, totalPrimary)
+			e.Points = selfLoop(chain[0], lg.loopIdx[e], vertical, g.Direction, totalPrimary)
 			continue
 		}
-		vertical := g.Direction == domain.TopBottom || g.Direction == domain.BottomTop
 		pts := make([]domain.Point, len(chain))
 		half := make([]float64, len(chain))
 		for i, ln := range chain {
 			pts[i] = ln.center(g.Direction, totalPrimary)
 			half[i] = primarySize(ln, vertical) / 2
+			if ln.label == e {
+				e.LabelPos = pts[i]
+				anchored[e] = true
+			}
 		}
 		pts = orthogonalize(pts, half, vertical)
 		from, to := chain[0], chain[len(chain)-1]
@@ -475,6 +588,7 @@ func routeEdges(lg *lgraph, g *domain.Graph, totalPrimary float64) {
 		}
 		e.Points = pts
 	}
+	return anchored
 }
 
 // orthogonalize converts a polyline of waypoint centers into a right-angle
@@ -525,12 +639,40 @@ func gapMid(ca, ha, cb, hb float64) float64 {
 	return (lo + hi) / 2
 }
 
-// selfLoop returns a small rectangular loop on the trailing side of a node.
-func selfLoop(ln *lnode, dir domain.Direction, totalPrimary float64) []domain.Point {
+// loopOut is how far a self-loop reaches out from its node; each further
+// loop on the same node nests loopStep beyond the previous one.
+const (
+	loopOut  = 24.0
+	loopStep = 10.0
+)
+
+// loopReach is how far the outermost of n self-loops reaches from its node.
+func loopReach(n int) float64 {
+	return loopOut + float64(max(n-1, 0))*loopStep
+}
+
+// selfLoop returns a small rectangular loop on the trailing cross side of a
+// node: the right in TD/BT, the bottom in LR/RL. That side never faces
+// another rank, so the loop stays clear of the node's other edges. Loop k
+// nests outside loops 0..k-1, reaching further and attaching wider apart.
+func selfLoop(ln *lnode, k int, vertical bool, dir domain.Direction, totalPrimary float64) []domain.Point {
 	c := ln.center(dir, totalPrimary)
-	const out = 24.0
+	out := loopReach(k + 1)
+	spread := func(size float64) float64 {
+		return math.Min(size/4+float64(k)*loopStep/2, size/2)
+	}
+	if !vertical {
+		by := c.Y + ln.h/2
+		qx := spread(ln.w)
+		return []domain.Point{
+			{X: c.X - qx, Y: by},
+			{X: c.X - qx, Y: by + out},
+			{X: c.X + qx, Y: by + out},
+			{X: c.X + qx, Y: by},
+		}
+	}
 	rx := c.X + ln.w/2
-	qy := ln.h / 4
+	qy := spread(ln.h)
 	return []domain.Point{
 		{X: rx, Y: c.Y - qy},
 		{X: rx + out, Y: c.Y - qy},

@@ -71,7 +71,7 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 	b.WriteByte('\n')
 
 	for i, r := range d.Relationships {
-		writeRelationship(&b, r, g.Edges[i], pal, o.FontSize)
+		writeRelationship(&b, r, g.Edges[i], pal, o)
 	}
 	for _, e := range d.Entities {
 		writeEntity(&b, e, g.NodeByID(e.Name), pal, o)
@@ -109,7 +109,8 @@ func writeEntity(b *strings.Builder, e *Entity, n *domain.Node, pal theme.Palett
 	}
 }
 
-func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal theme.Palette, fontSize float64) {
+func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal theme.Palette, o RenderOptions) {
+	fontSize := o.FontSize
 	if len(e.Points) < 2 {
 		return
 	}
@@ -136,6 +137,7 @@ func writeRelationship(b *strings.Builder, r *Relationship, e *domain.Edge, pal 
 
 	if r.Label != "" {
 		mid := e.LabelPos
+		svgutil.LabelBackground(b, r.Label, mid.X, mid.Y, svgutil.FaceFor(o.FontFace), fontSize, pal.Background)
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
 			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(r.Label))
 		b.WriteByte('\n')

@@ -1,0 +1,6 @@
+flowchart TD
+  R[route] --> A[retry step]
+  R --> B[next]
+  A -- retry until ready --> A
+  A -->|done| C[finish]
+  B --> C

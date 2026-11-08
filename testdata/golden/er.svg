@@ -1,35 +1,37 @@
-<svg role="img" xmlns="http://www.w3.org/2000/svg" width="132.11" height="374" viewBox="0 0 132.11 374" font-family="sans-serif" font-size="14">
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="132.11" height="410" viewBox="0 0 132.11 410" font-family="sans-serif" font-size="14">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
-    <path d="M50.05,64 L50.05,159" fill="none" stroke="#333333"/>
+    <path d="M50.05,64 L50.05,120.5 L50.05,177" fill="none" stroke="#333333"/>
     <line x1="55.05" y1="71" x2="45.05" y2="71" stroke="#333333"/>
-    <line x1="50.05" y1="147" x2="44.05" y2="159" stroke="#333333"/>
-    <line x1="50.05" y1="147" x2="56.05" y2="159" stroke="#333333"/>
-    <line x1="50.05" y1="147" x2="50.05" y2="159" stroke="#333333"/>
-    <circle cx="50.05" cy="141" r="4" fill="#ffffff" stroke="#333333"/>
+    <line x1="50.05" y1="165" x2="44.05" y2="177" stroke="#333333"/>
+    <line x1="50.05" y1="165" x2="56.05" y2="177" stroke="#333333"/>
+    <line x1="50.05" y1="165" x2="50.05" y2="177" stroke="#333333"/>
+    <circle cx="50.05" cy="159" r="4" fill="#ffffff" stroke="#333333"/>
     <text x="58.05" y="90.9" fill="#333333" text-anchor="middle" font-size="12">1</text>
-    <text x="42.05" y="141.9" fill="#333333" text-anchor="middle" font-size="12">0..N</text>
-    <text x="50.05" y="111.5" fill="#333333" text-anchor="middle" dy="-2">places</text>
-    <path d="M50.05,223 L50.05,318" fill="none" stroke="#333333"/>
-    <line x1="55.05" y1="230" x2="45.05" y2="230" stroke="#333333"/>
-    <line x1="50.05" y1="306" x2="44.05" y2="318" stroke="#333333"/>
-    <line x1="50.05" y1="306" x2="56.05" y2="318" stroke="#333333"/>
-    <line x1="50.05" y1="306" x2="50.05" y2="318" stroke="#333333"/>
-    <line x1="45.05" y1="304" x2="55.05" y2="304" stroke="#333333"/>
-    <text x="58.05" y="249.9" fill="#333333" text-anchor="middle" font-size="12">1</text>
-    <text x="42.05" y="300.9" fill="#333333" text-anchor="middle" font-size="12">1..N</text>
-    <text x="50.05" y="270.5" fill="#333333" text-anchor="middle" dy="-2">contains</text>
+    <text x="42.05" y="159.9" fill="#333333" text-anchor="middle" font-size="12">0..N</text>
+    <rect x="26.82" y="111.5" width="46.46" height="18" fill="#ffffff"/>
+    <text x="50.05" y="125.5" fill="#333333" text-anchor="middle" dy="-2">places</text>
+    <path d="M50.05,241 L50.05,297.5 L50.05,354" fill="none" stroke="#333333"/>
+    <line x1="55.05" y1="248" x2="45.05" y2="248" stroke="#333333"/>
+    <line x1="50.05" y1="342" x2="44.05" y2="354" stroke="#333333"/>
+    <line x1="50.05" y1="342" x2="56.05" y2="354" stroke="#333333"/>
+    <line x1="50.05" y1="342" x2="50.05" y2="354" stroke="#333333"/>
+    <line x1="45.05" y1="340" x2="55.05" y2="340" stroke="#333333"/>
+    <text x="58.05" y="267.9" fill="#333333" text-anchor="middle" font-size="12">1</text>
+    <text x="42.05" y="336.9" fill="#333333" text-anchor="middle" font-size="12">1..N</text>
+    <rect x="20.99" y="288.5" width="58.14" height="18" fill="#ffffff"/>
+    <text x="50.05" y="302.5" fill="#333333" text-anchor="middle" dy="-2">contains</text>
     <rect x="0" y="0" width="100.11" height="64" fill="#ECECFF" stroke="#9370DB"/>
     <text x="50.05" y="14" fill="#333333" text-anchor="middle" font-weight="bold">CUSTOMER</text>
     <line x1="0" y1="24" x2="100.11" y2="24" stroke="#9370DB"/>
     <text x="10" y="41" fill="#333333">string name</text>
     <text x="10" y="61" fill="#333333">string email</text>
-    <rect x="1.14" y="159" width="97.83" height="64" fill="#ECECFF" stroke="#9370DB"/>
-    <text x="50.05" y="173" fill="#333333" text-anchor="middle" font-weight="bold">ORDER</text>
-    <line x1="1.14" y1="183" x2="98.97" y2="183" stroke="#9370DB"/>
-    <text x="11.14" y="200" fill="#333333">int id</text>
-    <text x="11.14" y="220" fill="#333333">date created</text>
-    <rect x="3.88" y="318" width="92.35" height="24" fill="#ECECFF" stroke="#9370DB"/>
-    <text x="50.05" y="332" fill="#333333" text-anchor="middle" font-weight="bold">LINE_ITEM</text>
+    <rect x="1.14" y="177" width="97.83" height="64" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="50.05" y="191" fill="#333333" text-anchor="middle" font-weight="bold">ORDER</text>
+    <line x1="1.14" y1="201" x2="98.97" y2="201" stroke="#9370DB"/>
+    <text x="11.14" y="218" fill="#333333">int id</text>
+    <text x="11.14" y="238" fill="#333333">date created</text>
+    <rect x="3.88" y="354" width="92.35" height="24" fill="#ECECFF" stroke="#9370DB"/>
+    <text x="50.05" y="368" fill="#333333" text-anchor="middle" font-weight="bold">LINE_ITEM</text>
   </g>
 </svg>

@@ -1,21 +1,21 @@
-<svg role="img" xmlns="http://www.w3.org/2000/svg" width="354.7" height="166" viewBox="0 0 354.7 166" font-family="sans-serif" font-size="14">
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="391.27" height="166" viewBox="0 0 391.27 166" font-family="sans-serif" font-size="14">
   <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker></defs>
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
-    <path d="M69.57,67 L119.57,67" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <path d="M199.24,60 L224.24,60 L224.24,21 L249.24,21" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <rect x="206.46" y="26.5" width="35.57" height="18" fill="#ffffff"/>
-    <text x="224.24" y="40.5" fill="#333333" text-anchor="middle" dy="-2">pass</text>
-    <path d="M199.24,74 L224.25,74 L224.25,113 L249.25,113" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <rect x="212.3" y="79.5" width="23.89" height="18" fill="#ffffff"/>
-    <text x="224.25" y="93.5" fill="#333333" text-anchor="middle" dy="-2">fail</text>
+    <path d="M69.57,67 L95.07,67 L120.57,67" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M200.24,60 L212.74,60 L212.74,21 L243.03,21 L285.81,21" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="225.24" y="12" width="35.57" height="18" fill="#ffffff"/>
+    <text x="243.03" y="26" fill="#333333" text-anchor="middle" dy="-2">pass</text>
+    <path d="M200.24,74 L215.66,74 L215.66,113 L243.03,113 L285.82,113" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="231.08" y="104" width="23.89" height="18" fill="#ffffff"/>
+    <text x="243.03" y="118" fill="#333333" text-anchor="middle" dy="-2">fail</text>
     <rect x="0" y="46" width="69.57" height="42" fill="#dfd" stroke="#393"/>
     <text fill="#063" text-anchor="middle"><tspan x="34.78" y="71.9">Start</tspan></text>
-    <polygon points="159.41,46 199.24,67 159.41,88 119.57,67" fill="#ffd" stroke="#aa0"/>
-    <text fill="#333333" text-anchor="middle"><tspan x="159.41" y="71.9">Check</tspan></text>
-    <rect x="249.24" y="0" width="73.46" height="42" fill="#dfd" stroke="#393"/>
-    <text fill="#063" text-anchor="middle"><tspan x="285.97" y="25.9">Done</tspan></text>
-    <rect x="249.25" y="92" width="73.45" height="42" fill="#fdd" stroke="#933"/>
-    <text fill="#900" text-anchor="middle"><tspan x="285.97" y="117.9">Retry</tspan></text>
+    <polygon points="160.41,46 200.24,67 160.41,88 120.57,67" fill="#ffd" stroke="#aa0"/>
+    <text fill="#333333" text-anchor="middle"><tspan x="160.41" y="71.9">Check</tspan></text>
+    <rect x="285.81" y="0" width="73.46" height="42" fill="#dfd" stroke="#393"/>
+    <text fill="#063" text-anchor="middle"><tspan x="322.54" y="25.9">Done</tspan></text>
+    <rect x="285.82" y="92" width="73.45" height="42" fill="#fdd" stroke="#933"/>
+    <text fill="#900" text-anchor="middle"><tspan x="322.54" y="117.9">Retry</tspan></text>
   </g>
 </svg>

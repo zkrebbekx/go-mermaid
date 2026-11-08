@@ -1,23 +1,25 @@
-<svg role="img" xmlns="http://www.w3.org/2000/svg" width="215.49" height="438" viewBox="0 0 215.49 438" font-family="sans-serif" font-size="14">
+<svg role="img" xmlns="http://www.w3.org/2000/svg" width="215.49" height="474" viewBox="0 0 215.49 474" font-family="sans-serif" font-size="14">
   <defs><marker id="c4-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker></defs>
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g transform="translate(16,16)">
-    <path d="M91.74,64 L91.74,164" fill="none" stroke="#333333" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>
-    <text x="91.74" y="114" fill="#333333" text-anchor="middle" dy="-2">Uses</text>
-    <path d="M91.74,242 L91.74,342" fill="none" stroke="#333333" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>
-    <text x="91.74" y="292" fill="#333333" text-anchor="middle" dy="-2">Sends notifications</text>
+    <path d="M91.74,64 L91.74,123 L91.74,182" fill="none" stroke="#333333" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>
+    <rect x="72.8" y="114" width="37.89" height="18" fill="#ffffff"/>
+    <text x="91.74" y="128" fill="#333333" text-anchor="middle" dy="-2">Uses</text>
+    <path d="M91.74,260 L91.74,319 L91.74,378" fill="none" stroke="#333333" stroke-dasharray="4,3" marker-end="url(#c4-arrow)"/>
+    <rect x="29.99" y="310" width="123.5" height="18" fill="#ffffff"/>
+    <text x="91.74" y="324" fill="#333333" text-anchor="middle" dy="-2">Sends notifications</text>
     <rect x="7.76" y="0" width="167.96" height="64" rx="16" fill="#08427b" stroke="#08427b"/>
     <text x="91.74" y="18" fill="#ffffff" text-anchor="middle" font-weight="bold">Banking Customer</text>
     <text x="91.74" y="28" fill="#e6e6e6" text-anchor="middle" font-size="11.2">[Person]</text>
     <text x="91.74" y="42" fill="#f0f0f0" text-anchor="middle" font-size="11.2">A customer of the bank</text>
-    <rect x="3.49" y="164" width="176.52" height="78" rx="4" fill="#1168bd" stroke="#1168bd"/>
-    <text x="91.74" y="182" fill="#ffffff" text-anchor="middle" font-weight="bold">Internet Banking System</text>
-    <text x="91.74" y="192" fill="#e6e6e6" text-anchor="middle" font-size="11.2">[System]</text>
-    <text x="91.74" y="206" fill="#f0f0f0" text-anchor="middle" font-size="11.2">Allows customers to view</text>
-    <text x="91.74" y="220" fill="#f0f0f0" text-anchor="middle" font-size="11.2">information</text>
-    <rect x="0" y="342" width="183.49" height="64" rx="4" fill="#999999" stroke="#999999"/>
-    <text x="91.74" y="360" fill="#ffffff" text-anchor="middle" font-weight="bold">E-mail System</text>
-    <text x="91.74" y="370" fill="#e6e6e6" text-anchor="middle" font-size="11.2">[System]</text>
-    <text x="91.74" y="384" fill="#f0f0f0" text-anchor="middle" font-size="11.2">The internal email system</text>
+    <rect x="3.49" y="182" width="176.52" height="78" rx="4" fill="#1168bd" stroke="#1168bd"/>
+    <text x="91.74" y="200" fill="#ffffff" text-anchor="middle" font-weight="bold">Internet Banking System</text>
+    <text x="91.74" y="210" fill="#e6e6e6" text-anchor="middle" font-size="11.2">[System]</text>
+    <text x="91.74" y="224" fill="#f0f0f0" text-anchor="middle" font-size="11.2">Allows customers to view</text>
+    <text x="91.74" y="238" fill="#f0f0f0" text-anchor="middle" font-size="11.2">information</text>
+    <rect x="0" y="378" width="183.49" height="64" rx="4" fill="#999999" stroke="#999999"/>
+    <text x="91.74" y="396" fill="#ffffff" text-anchor="middle" font-weight="bold">E-mail System</text>
+    <text x="91.74" y="406" fill="#e6e6e6" text-anchor="middle" font-size="11.2">[System]</text>
+    <text x="91.74" y="420" fill="#f0f0f0" text-anchor="middle" font-size="11.2">The internal email system</text>
   </g>
 </svg>

@@ -195,7 +195,7 @@ func svg(d *Diagram, g *domain.Graph, res *layout.Result, o RenderOptions) []byt
 		writeCluster(&b, c, d, g, pal, o)
 	}
 	for _, t := range d.Transitions {
-		writeTransition(&b, t, d, g, pal)
+		writeTransition(&b, t, d, g, pal, o)
 	}
 	for _, s := range d.States {
 		writeState(&b, s, g.NodeByID(s.ID), pal, o)
@@ -273,7 +273,7 @@ func writeNote(b *strings.Builder, n *Note, g *domain.Graph, pal theme.Palette, 
 	b.WriteByte('\n')
 }
 
-func writeTransition(b *strings.Builder, t *Transition, dia *Diagram, g *domain.Graph, pal theme.Palette) {
+func writeTransition(b *strings.Builder, t *Transition, dia *Diagram, g *domain.Graph, pal theme.Palette, o RenderOptions) {
 	from, to := dia.anchor(t.From, false), dia.anchor(t.To, true)
 	var e *domain.Edge
 	for _, ed := range g.Edges {
@@ -298,6 +298,7 @@ func writeTransition(b *strings.Builder, t *Transition, dia *Diagram, g *domain.
 	b.WriteByte('\n')
 	if t.Label != "" {
 		mid := e.LabelPos
+		svgutil.LabelBackground(b, t.Label, mid.X, mid.Y, svgutil.FaceFor(o.FontFace), o.FontSize, pal.Background)
 		fmt.Fprintf(b, `    <text x="%s" y="%s" fill="%s" text-anchor="middle" dy="-2">%s</text>`,
 			svgutil.Num(mid.X), svgutil.Num(mid.Y), pal.Text, svgutil.Esc(t.Label))
 		b.WriteByte('\n')

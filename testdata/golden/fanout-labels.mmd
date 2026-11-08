@@ -1,0 +1,6 @@
+flowchart TD
+  P[poll status] -- still running --> P
+  P -- finished --> A[exit 0]
+  P -- failed --> B[exit 1]
+  P -- waiting for approval --> C[exit 3]
+  P -- timeout or network error --> D[exit 4]
